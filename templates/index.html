@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pong League</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; text-align: center; }
+        h1, h2 { color: #ffffff; }
+        
+        /* Card Style */
+        .card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; color: #888; border-bottom: 1px solid #333; padding: 10px; font-size: 0.9em; }
+        td { padding: 12px 10px; border-bottom: 1px solid #2a2a2a; text-align: left; }
+        .elo { font-weight: bold; color: #4CAF50; }
+        .rank { color: #aaa; width: 30px; }
+        
+        /* Forms */
+        select, input { padding: 12px; margin: 5px 0; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #444; border-radius: 6px; }
+        button { width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-green { background: #4CAF50; }
+        
+        /* Tabs */
+        .history { font-size: 0.85em; color: #888; }
+        .history-item { 
+            padding: 8px 0; 
+            border-bottom: 1px solid #222; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .match-info { flex-grow: 1; text-align: left;}
+        .match-date { font-size: 0.75em; color: #555; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🏓 Pong League</h1>
+
+    <!-- 1. Leaderboard Section -->
+    <div class="card">
+        <h2>🏆 Leaderboard</h2>
+        <table>
+            <thead><tr><th>#</th><th>Name</th><th>W/L</th><th>Elo</th></tr></thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td class="rank">{{ loop.index }}</td>
+                    <td>{{ player.name }}</td>
+                    <td style="font-size: 0.8em; color: #777;">{{ player.wins }}-{{ player.losses }}</td>
+                    <td class="elo">{{ player.elo }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 2. Log Match Section -->
+    <div class="card">
+        <h2>📝 Log a Game</h2>
+        <form action="/log_match" method="POST">
+            <label style="display:block; text-align:left; color:#888; margin-top:10px;">Winner</label>
+            <select name="winner" id="winner-select" onchange="updateOpponentOptions('winner')" required>
+                <option value="" disabled selected>Select Winner</option>
+                {% for player in players %}
+                <option value="{{ player.id }}">{{ player.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label style="display:block; text-align:left; color:#888; margin-top:10px;">Loser</label>
+            <select name="loser" id="loser-select" onchange="updateOpponentOptions('loser')" required>
+                <option value="" disabled selected>Select Loser</option>
+                {% for player in players %}
+                <option value="{{ player.id }}">{{ player.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label style="display:block; text-align:left; color:#888; margin-top:10px;">Score (e.g., 21-18)</label>
+            <input type="text" name="score" placeholder="21-19">
+
+            <button type="submit" class="btn-green">Record Match</button>
+        </form>
+    </div>
+
+    <!-- 3. Add Player Section -->
+    <div class="card">
+        <h3>Add New Player</h3>
+        <form action="/add_player" method="POST">
+            <input type="text" name="name" placeholder="Player Name" required>
+            <button type="submit" style="background: #555;">Add Player</button>
+        </form>
+    </div>
+
+    <!-- 4. Recent History -->
+    <div class="card history">
+        <h3>Recent Games</h3>
+        {% for match in matches %}
+        <div class="history-item">
+            <div class="match-info">
+                <strong style="color:#4CAF50">{{ match.winner_name }}</strong> 
+                <span style="font-size: 0.9em; color: #aaa;">({{ match.winner_pre_elo }} 
+                <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span> 
+                def. 
+                {{ match.loser_name }} 
+                <span style="font-size: 0.9em; color: #aaa;">({{ match.loser_pre_elo }} 
+                <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo }}</span>)</span>
+                ({{ match.score }})
+            </div>
+            <span class="match-date">{{ format_date(match.date) }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function updateOpponentOptions(changedRole) {
+            const winnerSelect = document.getElementById('winner-select');
+            const loserSelect = document.getElementById('loser-select');
+            
+            // Determine which list was changed and which is the opponent list
+            const changedSelect = changedRole === 'winner' ? winnerSelect : loserSelect;
+            const opponentSelect = changedRole === 'winner' ? loserSelect : winnerSelect;
+            
+            const selectedValue = changedSelect.value;
+
+            // Reset all options in the opponent list (enable everything first)
+            for (const option of opponentSelect.options) {
+                option.disabled = false;
+                // If the opponent list had the selected player chosen, reset its value 
+                // to prevent accidentally submitting the same player twice if the other field changes.
+                if (option.value === selectedValue && opponentSelect.value === selectedValue) {
+                    opponentSelect.value = ""; // Reset opponent selection
+                }
+            }
+            
+            // Now, disable the selected player in the opponent list
+            if (selectedValue) {
+                for (const option of opponentSelect.options) {
+                    if (option.value === selectedValue) {
+                        option.disabled = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Initial call to ensure no selection is duplicated if the page is reloaded with pre-selected values
+        document.addEventListener('DOMContentLoaded', () => {
+            updateOpponentOptions('winner');
+            updateOpponentOptions('loser');
+        });
+    </script>
+</body>
+</html>
