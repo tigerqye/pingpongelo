@@ -98,11 +98,11 @@
         {% for match in matches %}
         <div class="history-item">
             <div class="match-info">
-                <strong style="color:#4CAF50">{{ match.winner_id }}</strong> 
+                <strong style="color:#4CAF50">{{ match.winner.name }}</strong> 
                 <span style="font-size: 0.9em; color: #aaa;">({{ match.winner_pre_elo }} 
                 <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span> 
                 def. 
-                {{ match.loser_id }} 
+                {{ match.loser.name }} 
                 <span style="font-size: 0.9em; color: #aaa;">({{ match.loser_pre_elo }} 
                 <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo }}</span>)</span>
                 ({{ match.score }})
