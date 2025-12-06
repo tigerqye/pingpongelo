@@ -7,21 +7,53 @@
         body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; text-align: center; }
         h1, h2 { color: #ffffff; }
         
+        /* Interactive Title */
+        #pong-title { cursor: pointer; user-select: none; }
+
         /* Card Style */
         .card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         
         /* Tables */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; color: #888; border-bottom: 1px solid #333; padding: 10px; font-size: 0.9em; }
-        td { padding: 12px 10px; border-bottom: 1px solid #2a2a2a; text-align: left; }
+        td { padding: 8px 10px; border-bottom: 1px solid #2a2a2a; text-align: left; }
         .elo { font-weight: bold; color: #4CAF50; }
         .rank { color: #aaa; width: 30px; }
         
+        /* Admin Elements */
+        .admin-hidden { display: none; } /* Default state for admin features */
+
+        .remove-btn { 
+            background: #F44336; 
+            color: white; 
+            border: none; 
+            padding: 5px 8px; 
+            border-radius: 4px; 
+            font-size: 0.75em; 
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 5px;
+        }
+        .remove-btn:hover { background: #E53935; }
+        
         /* Forms */
-        select, input { padding: 12px; margin: 5px 0; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #444; border-radius: 6px; }
+        select, input[type="text"] { padding: 12px; margin: 5px 0; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #444; border-radius: 6px; }
         button { width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-green { background: #4CAF50; }
         
+        /* Admin Password Field Styling */
+        .admin-password-field {
+            width: 100%;
+            padding: 5px;
+            font-size: 0.8em;
+            background: #2a2a2a;
+            color: #ccc;
+            border: 1px solid #444;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
         /* Tabs */
         .history { font-size: 0.85em; color: #888; }
         .history-item { 
@@ -33,16 +65,52 @@
         }
         .match-info { flex-grow: 1; text-align: left;}
         .match-date { font-size: 0.75em; color: #555; margin-left: 10px; }
+        .match-row-content { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            width: 100%; 
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: #1e1e1e; padding: 25px; border-radius: 10px; 
+            width: 90%; max-width: 350px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .modal-content input { margin-bottom: 15px; }
+        .modal-content button { width: auto; padding: 10px 20px; margin-top: 0; margin-left: 10px; }
+        .modal-buttons { display: flex; justify-content: flex-end; }
     </style>
 </head>
 <body>
-    <h1>🏓 Pong League</h1>
+    <!-- Hidden Admin Login Modal -->
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Admin Access</h2>
+            <p>Enter the administrator password to enable management features.</p>
+            <input type="password" id="modal-admin-password" placeholder="Admin Password" required>
+            <div class="modal-buttons">
+                <button onclick="document.getElementById('admin-login-modal').style.display='none'" style="background: #555;">Cancel</button>
+                <button onclick="handleAdminLogin()" style="background: #2196F3;">Login</button>
+            </div>
+            <p id="modal-error-message" style="color: #F44336; margin-top: 10px; display: none; font-size: 0.9em;"></p>
+        </div>
+    </div>
+    
+    <h1 id="pong-title">🏓 Pong League</h1>
 
     <!-- 1. Leaderboard Section -->
     <div class="card">
         <h2>🏆 Leaderboard</h2>
         <table>
-            <thead><tr><th>#</th><th>Name</th><th>W/L</th><th>Elo</th></tr></thead>
+            <thead><tr><th>#</th><th>Name</th><th>W/L</th><th>Elo</th><th id="admin-header" class="admin-hidden">Admin</th></tr></thead>
             <tbody>
                 {% for player in players %}
                 <tr>
@@ -50,13 +118,23 @@
                     <td>{{ player.name }}</td>
                     <td style="font-size: 0.8em; color: #777;">{{ player.wins }}-{{ player.losses }}</td>
                     <td class="elo">{{ player.elo }}</td>
+                    <td id="player-admin-{{ player.id }}" class="admin-hidden" style="width: 120px;">
+                        <!-- Player Removal Form -->
+                        <form action="/remove_player/{{ player.id }}" method="POST" style="margin:0;" onsubmit="return injectAdminPassword(this)">
+                            <div class="admin-password-container">
+                                <!-- Hidden input field for the password -->
+                                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                                <button type="submit" class="remove-btn">Remove Player</button>
+                            </div>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- 2. Log Match Section -->
+    <!-- 2. Log Match Section (No change needed here) -->
     <div class="card">
         <h2>📝 Log a Game</h2>
         <form action="/log_match" method="POST">
@@ -97,43 +175,120 @@
         <h3>Recent Games</h3>
         {% for match in matches %}
         <div class="history-item">
-            <div class="match-info">
-                <strong style="color:#4CAF50">{{ match.winner.name }}</strong> 
-                <span style="font-size: 0.9em; color: #aaa;">({{ match.winner_pre_elo }} 
-                <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span> 
-                def. 
-                {{ match.loser.name }} 
-                <span style="font-size: 0.9em; color: #aaa;">({{ match.loser_pre_elo }} 
-                <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo }}</span>)</span>
-                ({{ match.score }})
+            <div class="match-row-content">
+                <div class="match-info">
+                    <strong style="color:#4CAF50">{{ match.winner.name }}</strong> 
+                    <span style="font-size: 0.9em; color: #aaa;">({{ match.winner_pre_elo }} 
+                    <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span> 
+                    def. 
+                    {{ match.loser.name }} 
+                    <span style="font-size: 0.9em; color: #aaa;">({{ match.loser_pre_elo }} 
+                    <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo }}</span>)</span>
+                    ({{ match.score }})
+                    <span class="match-date">{{ format_date(match.date) }}</span>
+                </div>
+                <!-- Match Revert Form -->
+                <form id="match-admin-{{ match.id }}" class="admin-hidden" action="/remove_match/{{ match.id }}" method="POST" style="margin:0; width: 120px;" onsubmit="return injectAdminPassword(this)">
+                    <!-- Hidden input field for the password -->
+                    <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                    <button type="submit" class="remove-btn">Revert Match</button>
+                </form>
             </div>
-            <span class="match-date">{{ format_date(match.date) }}</span>
         </div>
         {% endfor %}
     </div>
 
     <script>
+        // Store the admin password globally after successful modal entry
+        let adminPassword = null;
+        let clickCount = 0;
+        let lastClickTime = 0;
+        const DOUBLE_CLICK_TIME = 300; // Max time in ms between clicks for a "triple-click"
+
+        document.getElementById('pong-title').addEventListener('click', () => {
+            const now = Date.now();
+            
+            // Check if the time gap since the last click is too long (reset the counter)
+            if (now - lastClickTime > DOUBLE_CLICK_TIME) {
+                clickCount = 1;
+            } else {
+                clickCount++;
+            }
+            lastClickTime = now;
+
+            if (clickCount === 3) {
+                clickCount = 0; // Reset counter
+                document.getElementById('admin-login-modal').style.display = 'flex';
+                document.getElementById('modal-admin-password').value = '';
+                document.getElementById('modal-error-message').style.display = 'none';
+                document.getElementById('modal-admin-password').focus();
+            }
+        });
+
+        function handleAdminLogin() {
+            const passwordField = document.getElementById('modal-admin-password');
+            const password = passwordField.value;
+            const errorMessage = document.getElementById('modal-error-message');
+
+            // Client-side check: ensure the password field is not empty before allowing the UI to show.
+            // NOTE: The actual security check remains on the Flask server.
+            if (password.trim() === '') {
+                errorMessage.textContent = 'Password cannot be empty.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // Save the password and hide the modal
+            adminPassword = password;
+            document.getElementById('admin-login-modal').style.display = 'none';
+            
+            // Show all admin features
+            showAdminFeatures();
+        }
+
+        function showAdminFeatures() {
+            // Show Admin header column
+            document.getElementById('admin-header').classList.remove('admin-hidden');
+            
+            // Show player removal buttons
+            document.querySelectorAll('td[id^="player-admin-"]').forEach(el => {
+                el.classList.remove('admin-hidden');
+            });
+
+            // Show match revert buttons
+            document.querySelectorAll('form[id^="match-admin-"]').forEach(el => {
+                el.classList.remove('admin-hidden');
+            });
+        }
+        
+        function injectAdminPassword(form) {
+            // This function runs right before the form is submitted
+            if (adminPassword) {
+                // Find the hidden input field and set its value
+                const hiddenField = form.querySelector('.admin-password-field-hidden');
+                if (hiddenField) {
+                    hiddenField.value = adminPassword;
+                    return true; // Allow form submission
+                }
+            }
+            // If the password wasn't set, block submission (shouldn't happen if buttons are hidden correctly)
+            console.error("Admin password not set. Blocking submission.");
+            return false; 
+        }
+
+        // Standard functions
         function updateOpponentOptions(changedRole) {
             const winnerSelect = document.getElementById('winner-select');
             const loserSelect = document.getElementById('loser-select');
-            
-            // Determine which list was changed and which is the opponent list
             const changedSelect = changedRole === 'winner' ? winnerSelect : loserSelect;
             const opponentSelect = changedRole === 'winner' ? loserSelect : winnerSelect;
-            
             const selectedValue = changedSelect.value;
-
-            // Reset all options in the opponent list (enable everything first)
             for (const option of opponentSelect.options) {
                 option.disabled = false;
-                // If the opponent list had the selected player chosen, reset its value 
-                // to prevent accidentally submitting the same player twice if the other field changes.
                 if (option.value === selectedValue && opponentSelect.value === selectedValue) {
-                    opponentSelect.value = ""; // Reset opponent selection
+                    opponentSelect.value = "";
                 }
             }
-            
-            // Now, disable the selected player in the opponent list
             if (selectedValue) {
                 for (const option of opponentSelect.options) {
                     if (option.value === selectedValue) {
@@ -144,10 +299,18 @@
             }
         }
 
-        // Initial call to ensure no selection is duplicated if the page is reloaded with pre-selected values
         document.addEventListener('DOMContentLoaded', () => {
             updateOpponentOptions('winner');
             updateOpponentOptions('loser');
+
+            // Hide the admin features initially by adding the class to the relevant elements
+            document.getElementById('admin-header').classList.add('admin-hidden');
+            document.querySelectorAll('td[id^="player-admin-"]').forEach(el => {
+                el.classList.add('admin-hidden');
+            });
+            document.querySelectorAll('form[id^="match-admin-"]').forEach(el => {
+                el.classList.add('admin-hidden');
+            });
         });
     </script>
 </body>
