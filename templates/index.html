@@ -55,23 +55,48 @@
         }
 
         /* Tabs */
-        .history { font-size: 0.85em; color: #888; }
+        .history { font-size: 0.85em; color: #e0e0e0; }
         .history-item { 
             padding: 8px 0; 
             border-bottom: 1px solid #222; 
-            display: flex;
+            display: flex; /* Main container for score, player stack and actions/date */
             justify-content: space-between;
-            align-items: center;
+            align-items: center; /* Vertically center score and date */
         }
-        .match-info { flex-grow: 1; text-align: left;}
-        .match-date { font-size: 0.75em; color: #555; margin-left: 10px; }
-        .match-row-content { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            width: 100%; 
+        
+        /* NEW: Score styling */
+        .match-score-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2196F3; /* Distinct color for score */
+            margin-right: 15px;
+            padding: 5px 10px;
+            min-width: 60px; 
+            text-align: center;
+            border-right: 1px solid #333; /* Visual separation from player names */
         }
 
+        .match-players-stack {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            flex-grow: 1;
+            margin-right: 15px; /* Space between names and date/admin */
+        }
+        .match-actions-and-date {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* Align date and button to the right */
+            gap: 5px; /* Space between date and button */
+            min-width: 120px; /* Ensure space for the button */
+        }
+        .match-timestamp {
+            font-size: 0.75em; 
+            color: #888; 
+            text-align: right;
+            line-height: 1;
+        }
+        
         /* Modal Styles */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -175,21 +200,27 @@
         <h3>Recent Games</h3>
         {% for match in matches %}
         <div class="history-item">
-            <div class="match-row-content">
-                <div class="match-info">
+            <!-- NEW: Match Score Display -->
+            <div class="match-score-display">{{ match.score }}</div>
+            
+            <div class="match-players-stack">
+                <div class="winner-info">
                     <strong style="color:#4CAF50">{{ match.winner.name }}</strong> 
-                    <span style="font-size: 0.9em; color: #aaa;">({{ match.winner_pre_elo }} 
-                    <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span> 
-                    def. 
-                    {{ match.loser.name }} 
-                    <span style="font-size: 0.9em; color: #aaa;">({{ match.loser_pre_elo }} 
-                    <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo }}</span>)</span>
-                    ({{ match.score }})
-                    <span class="match-date">{{ format_date(match.date) }}</span>
+                    <span style="font-size: 0.8em; color: #aaa;">({{ match.winner_pre_elo }} 
+                    <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span>
+                    <!-- Score removed from here -->
                 </div>
+                <div class="loser-info">
+                    {{ match.loser.name }} 
+                    <span style="font-size: 0.8em; color: #aaa;">({{ match.loser_pre_elo }} 
+                    <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo }}</span>)</span>
+                </div>
+            </div>
+            
+            <div class="match-actions-and-date">
+                <div class="match-timestamp">{{ format_date(match.date) }}</div>
                 <!-- Match Revert Form -->
                 <form id="match-admin-{{ match.id }}" class="admin-hidden" action="/remove_match/{{ match.id }}" method="POST" style="margin:0; width: 120px;" onsubmit="return injectAdminPassword(this)">
-                    <!-- Hidden input field for the password -->
                     <input type="hidden" name="admin_password" class="admin-password-field-hidden">
                     <button type="submit" class="remove-btn">Revert Match</button>
                 </form>
