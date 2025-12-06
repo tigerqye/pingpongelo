@@ -1,10 +1,8 @@
 import os
-import sqlite3 # Kept for the initial init_db, but logic switches to SQLAlchemy
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, g
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import joinedload # <-- New Import
 from dotenv import load_dotenv
 
 # Load environment variables (like DATABASE_URL) from a .env file locally
@@ -14,13 +12,12 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configuration for SQLAlchemy (PostgreSQL/MySQL)
-# We read the database connection string from the environment variable (Render standard)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///pong_league.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# --- Database Models (Replacing raw SQL schema definition) ---
+# --- Database Models ---
 
 class Player(db.Model):
     __tablename__ = 'players'
@@ -42,11 +39,11 @@ class Match(db.Model):
     winner_post_elo = db.Column(db.Integer)
     loser_post_elo = db.Column(db.Integer)
 
-    # Relationships to get player names easily
+    # Relationships defined here allow access via match.winner and match.loser
     winner = db.relationship("Player", foreign_keys=[winner_id], backref="won_matches")
     loser = db.relationship("Player", foreign_keys=[loser_id], backref="lost_matches")
 
-# --- Elo Calculation Logic (Unchanged) ---
+# --- Elo Calculation Logic ---
 def calculate_elo(winner_elo, loser_elo):
     K = 32
     expected_winner = 1 / (1 + 10 ** ((loser_elo - winner_elo) / 400))
@@ -64,13 +61,16 @@ def index():
     players = Player.query.order_by(Player.elo.desc()).all()
     
     # 2. Get Match History (last 5 games)
-    # Uses relationship fields for cleaner join
-    matches = Match.query.order_by(Match.date.desc()).limit(5).all()
+    # FIX: Use joinedload to eagerly fetch the winner and loser relationships
+    # This prevents the 'lazy loading' issue in production environments.
+    matches = Match.query.options(
+        joinedload(Match.winner), 
+        joinedload(Match.loser)
+    ).order_by(Match.date.desc()).limit(5).all()
     
     # Helper function to format the timestamp for the template
-    # Note: Flask-SQLAlchemy uses datetime objects, so the format changes slightly
     def format_date(dt_object):
-        return dt_object.strftime('%b %d, %H:%M') # e.g., Dec 04, 21:15
+        return dt_object.strftime('%b %d, %H:%M')
 
     return render_template('index.html', 
                            players=players, 
@@ -96,11 +96,12 @@ def log_match():
         return redirect('/') 
 
     # 1. Get current Player objects
-    winner = Player.query.get(winner_id)
-    loser = Player.query.get(loser_id)
+    winner = db.session.get(Player, winner_id) # Use db.session.get for primary key lookup
+    loser = db.session.get(Player, loser_id)
     
     if not winner or not loser:
-        return "Player not found", 404
+        # It's better to return a useful error if a player ID is invalid
+        return "One or both players not found.", 404
         
     winner_pre_elo = winner.elo
     loser_pre_elo = loser.elo
@@ -132,9 +133,8 @@ def log_match():
 def init_db():
     """Initializes the database structure if it doesn't exist."""
     with app.app_context():
-        # Creates tables defined by the Models (Player, Match)
         db.create_all()
 
 if __name__ == '__main__':
-    init_db() # Run DB setup once on start
+    init_db()
     app.run(host='0.0.0.0', port=80, debug=True)
