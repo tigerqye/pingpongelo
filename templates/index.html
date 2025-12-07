@@ -7,8 +7,40 @@
         body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; text-align: center; }
         h1, h2 { color: #ffffff; }
         
-        /* Interactive Title */
-        #pong-title { cursor: pointer; user-select: none; }
+        /* Interactive Title and Icon Header */
+        #header-container {
+            display: flex;
+            justify-content: center; /* Primary focus: keep title centered */
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+            position: relative; /* Crucial for positioning the icon absolutely */
+        }
+        #pong-title { 
+            cursor: pointer; 
+            user-select: none; 
+            margin: 0; 
+            z-index: 10; /* Ensure title is above icon if they overlap */
+        } 
+
+        /* New rules icon - Absolutely positioned to the right */
+        #rules-icon {
+            cursor: pointer;
+            font-size: 1.5em;
+            color: #2196F3; /* Bright blue for visibility */
+            transition: color 0.2s;
+            line-height: 1;
+            font-weight: bold;
+            
+            /* Absolute positioning to move it to the top-right corner */
+            position: absolute; 
+            right: 0; 
+            top: 50%;
+            transform: translateY(-50%); /* Vertically center it in the header container */
+        }
+        #rules-icon:hover {
+            color: #4CAF50;
+        }
 
         /* Card Style */
         .card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
@@ -64,7 +96,7 @@
             align-items: center; /* Vertically center score and date */
         }
         
-        /* NEW: Score styling */
+        /* Score styling */
         .match-score-display {
             font-size: 1.2em;
             font-weight: bold;
@@ -129,7 +161,46 @@
         </div>
     </div>
     
-    <h1 id="pong-title">🏓 Pong League</h1>
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px; text-align: left;">
+            <h2 style="text-align: center;">🏓 Official Ping Pong Rules</h2>
+            
+            <p style="font-size: 0.9em; margin-bottom: 15px;">
+                These are the basic rules for standard table tennis (ping pong):
+            </p>
+
+            <ol style="padding-left: 20px; font-size: 0.85em; list-style-type: decimal;">
+                <li style="margin-bottom: 8px;">
+                    <strong>The Serve:</strong> The server must toss the ball upward at least 6 inches and strike it so it first hits their side of the table and then the opponent's side. The serve must start from behind the end line.
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Change of Service:</strong> Service changes hands every <b>two</b> points.
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Scoring:</strong> A game is won by the first player to reach <b>11 points</b> and be at least <b>two points ahead</b> of the opponent. If the score is 10-10 (deuce), service alternates after every point until one player gains a two-point lead.
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Legal Return:</strong> The ball must only be struck after it has bounced once on your side. It must then travel directly over the net and bounce on the opponent's side.
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Let:</strong> A serve that hits the net assembly and otherwise lands legally is a "let" and is replayed. There is no limit to the number of lets.
+                </li>
+            </ol>
+            
+            <div class="modal-buttons" style="margin-top: 20px; justify-content: center;">
+                <button onclick="document.getElementById('rules-modal').style.display='none'" style="background: #2196F3; width: 100%; max-width: 150px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Title and Icon -->
+    <div id="header-container">
+        <!-- Title is centered by flexbox -->
+        <h1 id="pong-title">🏓 Pong League</h1>
+        <!-- Icon is absolutely positioned to the right -->
+        <span id="rules-icon" onclick="document.getElementById('rules-modal').style.display='flex'">?</span>
+    </div>
 
     <!-- 1. Leaderboard Section -->
     <div class="card">
@@ -200,7 +271,7 @@
         <h3>Recent Games</h3>
         {% for match in matches %}
         <div class="history-item">
-            <!-- NEW: Match Score Display -->
+            <!-- Match Score Display -->
             <div class="match-score-display">{{ match.score }}</div>
             
             <div class="match-players-stack">
@@ -208,7 +279,6 @@
                     <strong style="color:#4CAF50">{{ match.winner.name }}</strong> 
                     <span style="font-size: 0.8em; color: #aaa;">({{ match.winner_pre_elo }} 
                     <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span>
-                    <!-- Score removed from here -->
                 </div>
                 <div class="loser-info">
                     {{ match.loser.name }} 
