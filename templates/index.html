@@ -20,26 +20,35 @@
             cursor: pointer; 
             user-select: none; 
             margin: 0; 
-            z-index: 10; /* Ensure title is above icon if they overlap */
+            z-index: 10; 
         } 
 
-        /* New rules icon - Absolutely positioned to the right */
+        /* Rules icon - Absolutely positioned to the right with circle/i style */
         #rules-icon {
             cursor: pointer;
-            font-size: 1.5em;
-            color: #2196F3; /* Bright blue for visibility */
-            transition: color 0.2s;
-            line-height: 1;
+            color: #e0e0e0; /* Light gray 'i' */
+            background: #333; /* Dark gray circle background */
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Georgia', serif; /* Use a clean serif font for 'i' */
+            font-style: italic;
             font-weight: bold;
+            font-size: 1.2em;
             
             /* Absolute positioning to move it to the top-right corner */
             position: absolute; 
             right: 0; 
             top: 50%;
             transform: translateY(-50%); /* Vertically center it in the header container */
+            transition: background 0.2s;
         }
         #rules-icon:hover {
-            color: #4CAF50;
+            background: #4CAF50;
+            color: white;
         }
 
         /* Card Style */
@@ -122,7 +131,7 @@
             gap: 5px; /* Space between date and button */
             min-width: 120px; /* Ensure space for the button */
         }
-        .match-timestamp {
+        .match-timestamp-container { /* New container for JS formatting */
             font-size: 0.75em; 
             color: #888; 
             text-align: right;
@@ -167,7 +176,7 @@
             <h2 style="text-align: center;">🏓 Official Ping Pong Rules</h2>
             
             <p style="font-size: 0.9em; margin-bottom: 15px;">
-                These are the basic rules for standard table tennis (ping pong):
+                These are the basic rules for standard table tennis if you want to play by them, if not enjoy the games however you want!
             </p>
 
             <ol style="padding-left: 20px; font-size: 0.85em; list-style-type: decimal;">
@@ -199,7 +208,7 @@
         <!-- Title is centered by flexbox -->
         <h1 id="pong-title">🏓 Pong League</h1>
         <!-- Icon is absolutely positioned to the right -->
-        <span id="rules-icon" onclick="document.getElementById('rules-modal').style.display='flex'">?</span>
+        <span id="rules-icon" onclick="document.getElementById('rules-modal').style.display='flex'">i</span>
     </div>
 
     <!-- 1. Leaderboard Section -->
@@ -288,7 +297,10 @@
             </div>
             
             <div class="match-actions-and-date">
-                <div class="match-timestamp">{{ format_date(match.date) }}</div>
+                <!-- Data attribute holds the raw UTC date string for JS to process -->
+                <div class="match-timestamp-container" data-utc-date="{{ match.date }}">
+                    <span class="js-local-datetime">Loading...</span>
+                </div>
                 <!-- Match Revert Form -->
                 <form id="match-admin-{{ match.id }}" class="admin-hidden" action="/remove_match/{{ match.id }}" method="POST" style="margin:0; width: 120px;" onsubmit="return injectAdminPassword(this)">
                     <input type="hidden" name="admin_password" class="admin-password-field-hidden">
@@ -305,6 +317,46 @@
         let clickCount = 0;
         let lastClickTime = 0;
         const DOUBLE_CLICK_TIME = 300; // Max time in ms between clicks for a "triple-click"
+
+        // Function to format UTC dates to EST/EDT
+        function formatDatesToEst() {
+            const dateElements = document.querySelectorAll('.match-timestamp-container');
+            const estOptions = {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: 'numeric', minute: '2-digit', 
+                hour12: true,
+                timeZone: 'America/New_York', // Uses EST or EDT as appropriate
+                timeZoneName: 'short',
+            };
+
+            dateElements.forEach(el => {
+                const utcDateString = el.getAttribute('data-utc-date');
+                const targetSpan = el.querySelector('.js-local-datetime');
+
+                if (!utcDateString) {
+                    targetSpan.textContent = 'No date recorded';
+                    return;
+                }
+
+                try {
+                    // Append 'Z' to ensure the browser treats the string as UTC
+                    const date = new Date(utcDateString + 'Z'); 
+                    
+                    if (isNaN(date.getTime())) {
+                        targetSpan.textContent = 'Invalid Date Format';
+                        return;
+                    }
+
+                    // Format to EST/EDT
+                    const estDateTime = date.toLocaleString('en-US', estOptions);
+                    targetSpan.textContent = estDateTime;
+                } catch (e) {
+                    targetSpan.textContent = 'Error: Date Processing';
+                    console.error("Date formatting error:", e);
+                }
+            });
+        }
+
 
         document.getElementById('pong-title').addEventListener('click', () => {
             const now = Date.now();
@@ -412,6 +464,9 @@
             document.querySelectorAll('form[id^="match-admin-"]').forEach(el => {
                 el.classList.add('admin-hidden');
             });
+            
+            // Format dates to EST/EDT
+            formatDatesToEst();
         });
     </script>
 </body>
