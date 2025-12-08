@@ -322,11 +322,11 @@
         function formatDatesToEst() {
             const dateElements = document.querySelectorAll('.match-timestamp-container');
             const estOptions = {
-                year: 'numeric', month: 'short', day: 'numeric',
+                month: 'short', day: 'numeric',
                 hour: 'numeric', minute: '2-digit', 
                 hour12: true,
                 timeZone: 'America/New_York', // Uses EST or EDT as appropriate
-                timeZoneName: 'short',
+                // timeZoneName: 'short',
             };
 
             dateElements.forEach(el => {
