@@ -135,6 +135,17 @@ def log_match():
     db.session.commit()
     return redirect('/')
 
+@app.route('/check_admin_password', methods=['POST'])
+def check_admin_password_route():
+    """Endpoint to validate the admin password via AJAX/Fetch."""
+    submitted_password = request.json.get('admin_password')
+    if check_admin_password(submitted_password):
+        return {"success": True}, 200
+    else:
+        # We return 200 but indicate failure in the body for simpler client-side handling, 
+        # or we could return 401 for more correctness. Let's use 401.
+        return {"success": False, "message": "Incorrect Password"}, 401
+
 # --- ADMIN FEATURES ---
 
 @app.route('/remove_player/<int:player_id>', methods=['POST'])

@@ -382,21 +382,47 @@
             const passwordField = document.getElementById('modal-admin-password');
             const password = passwordField.value;
             const errorMessage = document.getElementById('modal-error-message');
+            errorMessage.style.display = 'none';
+            errorMessage.textContent = ''; // Clear previous errors
 
-            // Client-side check: ensure the password field is not empty before allowing the UI to show.
-            // NOTE: The actual security check remains on the Flask server.
             if (password.trim() === '') {
                 errorMessage.textContent = 'Password cannot be empty.';
                 errorMessage.style.display = 'block';
                 return;
             }
 
-            // Save the password and hide the modal
-            adminPassword = password;
-            document.getElementById('admin-login-modal').style.display = 'none';
-            
-            // Show all admin features
-            showAdminFeatures();
+            // 1. Send password to the server for immediate check
+            fetch('/check_admin_password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ admin_password: password })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // 2. If successful (status 200), save password and show UI
+                    adminPassword = password;
+                    document.getElementById('admin-login-modal').style.display = 'none';
+                    showAdminFeatures();
+                } else {
+                    // 3. If unsuccessful (status 401), show error message
+                    return response.json().then(data => {
+                        errorMessage.textContent = data.message || 'Login failed: Unknown error.';
+                        errorMessage.style.display = 'block';
+                    }).catch(() => {
+                        // Fallback for non-JSON errors
+                         errorMessage.textContent = 'Server Error during login check.';
+                         errorMessage.style.display = 'block';
+                    });
+                }
+            })
+            .catch(error => {
+                // Network or CORS error
+                errorMessage.textContent = 'Network error during login check.';
+                errorMessage.style.display = 'block';
+                console.error('Error:', error);
+            });
         }
 
         function showAdminFeatures() {
