@@ -3,6 +3,7 @@
 <head>
     <title>Pong League</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; text-align: center; }
         h1, h2 { color: #ffffff; }
@@ -49,6 +50,20 @@
         #rules-icon:hover {
             background: #4CAF50;
             color: white;
+        }
+        
+        /* Admin Note Styling */
+        #league-note {
+            background: #3a3a3a; /* Darker background for the note */
+            color: #ffeb3b; /* A bright, attention-grabbing color (yellow) */
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 10px auto 20px auto;
+            max-width: 600px;
+            font-size: 0.9em;
+            font-weight: 500;
+            border-left: 5px solid #ff9800; /* Orange border for highlight */
+            text-align: center;
         }
 
         /* Card Style */
@@ -156,7 +171,6 @@
     </style>
 </head>
 <body>
-    <!-- Hidden Admin Login Modal -->
     <div id="admin-login-modal" class="modal">
         <div class="modal-content">
             <h2>Admin Access</h2>
@@ -170,7 +184,6 @@
         </div>
     </div>
     
-    <!-- Rules Modal -->
     <div id="rules-modal" class="modal">
         <div class="modal-content" style="max-width: 500px; text-align: left;">
             <h2 style="text-align: center;">🏓 Official Ping Pong Rules</h2>
@@ -203,15 +216,17 @@
         </div>
     </div>
 
-    <!-- Title and Icon -->
     <div id="header-container">
-        <!-- Title is centered by flexbox -->
         <h1 id="pong-title">🏓 Pong League</h1>
-        <!-- Icon is absolutely positioned to the right -->
         <span id="rules-icon" onclick="document.getElementById('rules-modal').style.display='flex'">i</span>
     </div>
 
-    <!-- 1. Leaderboard Section -->
+    {% if admin_note %}
+    <div id="league-note">
+        📣 {{ admin_note }}
+    </div>
+    {% endif %}
+
     <div class="card">
         <h2>🏆 Leaderboard</h2>
         <table>
@@ -224,10 +239,8 @@
                     <td style="font-size: 0.8em; color: #777;">{{ player.wins }}-{{ player.losses }}</td>
                     <td class="elo">{{ player.elo }}</td>
                     <td id="player-admin-{{ player.id }}" class="admin-hidden" style="width: 120px;">
-                        <!-- Player Removal Form -->
                         <form action="/remove_player/{{ player.id }}" method="POST" style="margin:0;" onsubmit="return injectAdminPassword(this)">
                             <div class="admin-password-container">
-                                <!-- Hidden input field for the password -->
                                 <input type="hidden" name="admin_password" class="admin-password-field-hidden">
                                 <button type="submit" class="remove-btn">Remove Player</button>
                             </div>
@@ -239,7 +252,6 @@
         </table>
     </div>
 
-    <!-- 2. Log Match Section (No change needed here) -->
     <div class="card">
         <h2>📝 Log a Game</h2>
         <form action="/log_match" method="POST">
@@ -266,7 +278,6 @@
         </form>
     </div>
 
-    <!-- 3. Add Player Section -->
     <div class="card">
         <h3>Add New Player</h3>
         <form action="/add_player" method="POST">
@@ -274,13 +285,20 @@
             <button type="submit" style="background: #555;">Add Player</button>
         </form>
     </div>
+    
+    <div id="note-admin-card" class="card admin-hidden">
+        <h3>📢 Update League Note</h3>
+        <form action="/update_admin_note" method="POST" onsubmit="return injectAdminPassword(this)">
+            <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+            <input type="text" name="admin_note" id="admin-note-input" placeholder="Enter announcement text (Leave empty to hide)" value="{{ admin_note | default('') }}">
+            <button type="submit" class="btn-green" style="background: #ff9800;">Save Note</button>
+        </form>
+    </div>
 
-    <!-- 4. Recent History -->
     <div class="card history">
         <h3>Recent Games</h3>
         {% for match in matches %}
         <div class="history-item">
-            <!-- Match Score Display -->
             <div class="match-score-display">{{ match.score }}</div>
             
             <div class="match-players-stack">
@@ -297,11 +315,9 @@
             </div>
             
             <div class="match-actions-and-date">
-                <!-- Data attribute holds the raw UTC date string for JS to process -->
                 <div class="match-timestamp-container" data-utc-date="{{ match.date }}">
                     <span class="js-local-datetime">Loading...</span>
                 </div>
-                <!-- Match Revert Form -->
                 <form id="match-admin-{{ match.id }}" class="admin-hidden" action="/remove_match/{{ match.id }}" method="POST" style="margin:0; width: 120px;" onsubmit="return injectAdminPassword(this)">
                     <input type="hidden" name="admin_password" class="admin-password-field-hidden">
                     <button type="submit" class="remove-btn">Revert Match</button>
@@ -411,7 +427,7 @@
                         errorMessage.textContent = data.message || 'Login failed: Unknown error.';
                         errorMessage.style.display = 'block';
                     }).catch(() => {
-                        // Fallback for non-JSON errors
+                         // Fallback for non-JSON errors
                          errorMessage.textContent = 'Server Error during login check.';
                          errorMessage.style.display = 'block';
                     });
@@ -438,6 +454,9 @@
             document.querySelectorAll('form[id^="match-admin-"]').forEach(el => {
                 el.classList.remove('admin-hidden');
             });
+            
+            // Show the League Note Admin Card
+            document.getElementById('note-admin-card').classList.remove('admin-hidden');
         }
         
         function injectAdminPassword(form) {
@@ -490,6 +509,7 @@
             document.querySelectorAll('form[id^="match-admin-"]').forEach(el => {
                 el.classList.add('admin-hidden');
             });
+            document.getElementById('note-admin-card').classList.add('admin-hidden');
             
             // Format dates to EST/EDT
             formatDatesToEst();

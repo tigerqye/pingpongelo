@@ -53,16 +53,30 @@ class Match(db.Model):
     winner = db.relationship("Player", foreign_keys=[winner_id], backref="won_matches")
     loser = db.relationship("Player", foreign_keys=[loser_id], backref="lost_matches")
 
+class LeagueConfig(db.Model):
+    __tablename__ = 'league_config'
+    id = db.Column(db.Integer, primary_key=True)
+    # The note will be stored here. We will only use the entry with id=1.
+    admin_note = db.Column(db.Text, default="") 
+
 # --- Elo Calculation Logic ---
 def calculate_elo(winner_elo, loser_elo):
-    K = 32
+    """Calculates the new Elo ratings for the winner and loser, rounding results."""
+    K = 32 # The maximum change in a rating from one game
+    
+    # Calculate expected outcomes (Ea)
     expected_winner = 1 / (1 + 10 ** ((loser_elo - winner_elo) / 400))
     expected_loser = 1 / (1 + 10 ** ((winner_elo - loser_elo) / 400))
     
-    new_winner_elo = winner_elo + K * (1 - expected_winner)
-    new_loser_elo = loser_elo + K * (0 - expected_loser)
+    # Calculate new Elo (Ra' = Ra + K * (S - Ea))
+    new_winner_elo_float = winner_elo + K * (1 - expected_winner)
+    new_loser_elo_float = loser_elo + K * (0 - expected_loser)
     
-    return int(new_winner_elo), int(new_loser_elo)
+    # Round to the nearest integer for the final Elo score
+    new_winner_elo = int(round(new_winner_elo_float))
+    new_loser_elo = int(round(new_loser_elo_float))
+    
+    return new_winner_elo, new_loser_elo
 
 # --- Routes ---
 @app.route('/')
@@ -76,12 +90,17 @@ def index():
         joinedload(Match.loser)
     ).order_by(Match.date.desc()).limit(5).all()
     
+    # 3. Get the Admin Note
+    config = LeagueConfig.query.get(1)
+    admin_note = config.admin_note if config else ""
+    
     def format_date(dt_object):
         return dt_object.strftime('%b %d, %H:%M')
 
     return render_template('index.html', 
                            players=players, 
                            matches=matches,
+                           admin_note=admin_note,
                            format_date=format_date)
 
 @app.route('/add_player', methods=['POST'])
@@ -135,6 +154,8 @@ def log_match():
     db.session.commit()
     return redirect('/')
 
+# --- ADMIN FEATURES ---
+
 @app.route('/check_admin_password', methods=['POST'])
 def check_admin_password_route():
     """Endpoint to validate the admin password via AJAX/Fetch."""
@@ -142,11 +163,7 @@ def check_admin_password_route():
     if check_admin_password(submitted_password):
         return {"success": True}, 200
     else:
-        # We return 200 but indicate failure in the body for simpler client-side handling, 
-        # or we could return 401 for more correctness. Let's use 401.
-        return {"success": False, "message": "Incorrect Password"}, 401
-
-# --- ADMIN FEATURES ---
+        return {"success": False, "message": "Incorrect Password"}, 401 
 
 @app.route('/remove_player/<int:player_id>', methods=['POST'])
 def remove_player(player_id):
@@ -194,13 +211,35 @@ def remove_match(match_id):
         
         db.session.commit()
     return redirect('/')
+    
+@app.route('/update_admin_note', methods=['POST'])
+def update_admin_note():
+    """Updates the admin note displayed on the front page."""
+    if not check_admin_password(request.form.get('admin_password')):
+        return "Unauthorized: Incorrect admin password.", 401
+
+    new_note = request.form.get('admin_note', '').strip()
+    
+    # Get the single config row (we initialized it to id=1)
+    config = db.session.get(LeagueConfig, 1)
+    
+    if config:
+        config.admin_note = new_note
+        db.session.commit()
+        
+    return redirect('/')
 
 # --- END ADMIN FEATURES ---
 
 def init_db():
-    """Initializes the database structure if it doesn't exist."""
+    """Initializes the database structure and ensures a LeagueConfig entry exists."""
     with app.app_context():
         db.create_all()
+        # Ensure the LeagueConfig row exists for the admin note
+        if LeagueConfig.query.get(1) is None:
+            config = LeagueConfig(id=1, admin_note="")
+            db.session.add(config)
+            db.session.commit()
 
 if __name__ == '__main__':
     init_db()
