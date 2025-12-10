@@ -11,11 +11,11 @@
         /* Interactive Title and Icon Header */
         #header-container {
             display: flex;
-            justify-content: center; /* Primary focus: keep title centered */
+            justify-content: center; 
             align-items: center;
             margin-bottom: 20px;
             width: 100%;
-            position: relative; /* Crucial for positioning the icon absolutely */
+            position: relative; 
         }
         #pong-title { 
             cursor: pointer; 
@@ -24,27 +24,25 @@
             z-index: 10; 
         } 
 
-        /* Rules icon - Absolutely positioned to the right with circle/i style */
+        /* Rules icon */
         #rules-icon {
             cursor: pointer;
-            color: #e0e0e0; /* Light gray 'i' */
-            background: #333; /* Dark gray circle background */
+            color: #e0e0e0;
+            background: #333;
             border-radius: 50%;
             width: 28px;
             height: 28px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Georgia', serif; /* Use a clean serif font for 'i' */
+            font-family: 'Georgia', serif; 
             font-style: italic;
             font-weight: bold;
             font-size: 1.2em;
-            
-            /* Absolute positioning to move it to the top-right corner */
             position: absolute; 
             right: 0; 
             top: 50%;
-            transform: translateY(-50%); /* Vertically center it in the header container */
+            transform: translateY(-50%);
             transition: background 0.2s;
         }
         #rules-icon:hover {
@@ -54,18 +52,87 @@
         
         /* Admin Note Styling */
         #league-note {
-            background: #3a3a3a; /* Darker background for the note */
-            color: #ffeb3b; /* A bright, attention-grabbing color (yellow) */
+            background: #3a3a3a; 
+            color: #ffeb3b; 
             padding: 10px 20px;
             border-radius: 8px;
             margin: 10px auto 20px auto;
             max-width: 600px;
             font-size: 0.9em;
             font-weight: 500;
-            border-left: 5px solid #ff9800; /* Orange border for highlight */
+            border-left: 5px solid #ff9800; 
             text-align: center;
         }
-
+        
+        /* Tournament Styles */
+        /* --- NEW STYLES FOR SCROLLABLE BRACKET --- */
+        #bracket-container {
+            overflow-x: auto; /* Enable horizontal scrolling */
+            padding-bottom: 10px; /* Space for scrollbar */
+        }
+        #bracket-rounds {
+            display: flex; /* Arrange rounds horizontally */
+            width: fit-content; /* Allow the content to expand beyond the screen */
+            padding: 10px 0;
+        }
+        .bracket-round {
+            flex-shrink: 0; /* Prevent rounds from shrinking */
+            width: 280px; /* Fixed width for each round column */
+            margin-right: 20px;
+            padding-right: 10px;
+            border-right: 1px dashed #333;
+        }
+        .bracket-round:last-child {
+            border-right: none;
+            margin-right: 0;
+        }
+        .round-matches {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Spacing between matches */
+        }
+        .match-entry {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            /* margin-bottom: 10px; REMOVED, controlled by gap in .round-matches */
+            text-align: left;
+            transition: all 0.3s;
+        }
+        .match-entry.completed {
+            background: #1a1a1a;
+            color: #777;
+            border: 1px solid #4CAF5055;
+        }
+        .match-entry.completed .match-players, .match-entry.completed .match-header strong {
+            color: #ccc;
+        }
+        .match-entry.future {
+            background: #222;
+            color: #888;
+            border: 1px solid #444;
+        }
+        .match-entry.future .match-players {
+            font-weight: normal;
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+        .match-header span { color: #888; font-size: 0.8em; }
+        .match-players { font-size: 1.1em; font-weight: bold; margin-bottom: 10px; }
+        .match-players .vs { color: #888; font-weight: normal; margin: 0 8px; }
+        .match-status { color: #F44336; font-size: 0.9em; font-weight: bold; }
+        .match-status.completed { color: #4CAF50; }
+        .match-status.future { color: #ffeb3b; }
+        .match-winner { color: #4CAF50; font-weight: bold; font-size: 1.1em; margin-top: 5px;}
+        .match-winner.bye { color: #2196F3; }
+        /* --- END NEW STYLES --- */
+        
         /* Card Style */
         .card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         
@@ -77,7 +144,7 @@
         .rank { color: #aaa; width: 30px; }
         
         /* Admin Elements */
-        .admin-hidden { display: none; } /* Default state for admin features */
+        .admin-hidden { display: none; } 
 
         .remove-btn { 
             background: #F44336; 
@@ -96,6 +163,7 @@
         select, input[type="text"] { padding: 12px; margin: 5px 0; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #444; border-radius: 6px; }
         button { width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-green { background: #4CAF50; }
+        .btn-orange { background: #ff9800; }
         
         /* Admin Password Field Styling */
         .admin-password-field {
@@ -110,54 +178,51 @@
             margin-bottom: 5px;
         }
 
-        /* Tabs */
+        /* History styles (unmodified) */
         .history { font-size: 0.85em; color: #e0e0e0; }
         .history-item { 
             padding: 8px 0; 
             border-bottom: 1px solid #222; 
-            display: flex; /* Main container for score, player stack and actions/date */
+            display: flex;
             justify-content: space-between;
-            align-items: center; /* Vertically center score and date */
+            align-items: center; 
         }
-        
-        /* Score styling */
         .match-score-display {
             font-size: 1.2em;
             font-weight: bold;
-            color: #2196F3; /* Distinct color for score */
+            color: #2196F3;
             margin-right: 15px;
             padding: 5px 10px;
             min-width: 60px; 
             text-align: center;
-            border-right: 1px solid #333; /* Visual separation from player names */
+            border-right: 1px solid #333;
         }
-
         .match-players-stack {
             display: flex;
             flex-direction: column;
             text-align: left;
             flex-grow: 1;
-            margin-right: 15px; /* Space between names and date/admin */
+            margin-right: 15px; 
         }
         .match-actions-and-date {
             display: flex;
             flex-direction: column;
-            align-items: flex-end; /* Align date and button to the right */
-            gap: 5px; /* Space between date and button */
-            min-width: 120px; /* Ensure space for the button */
+            align-items: flex-end; 
+            gap: 5px; 
+            min-width: 120px; 
         }
-        .match-timestamp-container { /* New container for JS formatting */
+        .match-timestamp-container { 
             font-size: 0.75em; 
             color: #888; 
             text-align: right;
             line-height: 1;
         }
         
-        /* Modal Styles */
+        /* Modal Styles (unmodified) */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7);
-            display: none; /* Hidden by default */
+            display: none; 
             justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
@@ -187,29 +252,16 @@
     <div id="rules-modal" class="modal">
         <div class="modal-content" style="max-width: 500px; text-align: left;">
             <h2 style="text-align: center;">🏓 Official Ping Pong Rules</h2>
-            
             <p style="font-size: 0.9em; margin-bottom: 15px;">
                 These are the basic rules for standard table tennis if you want to play by them, if not enjoy the games however you want!
             </p>
-
             <ol style="padding-left: 20px; font-size: 0.85em; list-style-type: decimal;">
-                <li style="margin-bottom: 8px;">
-                    <strong>The Serve:</strong> The server must toss the ball upward at least 6 inches and strike it so it first hits their side of the table and then the opponent's side. The serve must start from behind the end line.
-                </li>
-                <li style="margin-bottom: 8px;">
-                    <strong>Change of Service:</strong> Service changes hands every <b>two</b> points.
-                </li>
-                <li style="margin-bottom: 8px;">
-                    <strong>Scoring:</strong> A game is won by the first player to reach <b>11 points</b> and be at least <b>two points ahead</b> of the opponent. If the score is 10-10 (deuce), service alternates after every point until one player gains a two-point lead.
-                </li>
-                <li style="margin-bottom: 8px;">
-                    <strong>Legal Return:</strong> The ball must only be struck after it has bounced once on your side. It must then travel directly over the net and bounce on the opponent's side.
-                </li>
-                <li style="margin-bottom: 8px;">
-                    <strong>Let:</strong> A serve that hits the net assembly and otherwise lands legally is a "let" and is replayed. There is no limit to the number of lets.
-                </li>
+                <li style="margin-bottom: 8px;"><strong>The Serve:</strong> The server must toss the ball upward at least 6 inches and strike it so it first hits their side of the table and then the opponent's side. The serve must start from behind the end line.</li>
+                <li style="margin-bottom: 8px;"><strong>Change of Service:</strong> Service changes hands every <b>two</b> points.</li>
+                <li style="margin-bottom: 8px;"><strong>Scoring:</strong> A game is won by the first player to reach <b>11 points</b> and be at least <b>two points ahead</b> of the opponent. If the score is 10-10 (deuce), service alternates after every point until one player gains a two-point lead.</li>
+                <li style="margin-bottom: 8px;"><strong>Legal Return:</strong> The ball must only be struck after it has bounced once on your side. It must then travel directly over the net and bounce on the opponent's side.</li>
+                <li style="margin-bottom: 8px;"><strong>Let:</strong> A serve that hits the net assembly and otherwise lands legally is a "let" and is replayed. There is no limit to the number of lets.</li>
             </ol>
-            
             <div class="modal-buttons" style="margin-top: 20px; justify-content: center;">
                 <button onclick="document.getElementById('rules-modal').style.display='none'" style="background: #2196F3; width: 100%; max-width: 150px;">Close</button>
             </div>
@@ -226,6 +278,145 @@
         📣 {{ admin_note }}
     </div>
     {% endif %}
+    
+    <div class="card">
+        <h2>🏅 Tournament Hub</h2>
+        
+        <div id="tournament-admin-controls" class="admin-hidden" style="margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 15px;">
+            <p style="color: #bbb; font-size: 0.9em;">Admin Mode: Change Tournament State</p>
+            <form action="/admin_start_signup" method="POST" style="display:inline-block; margin-right: 5px;" onsubmit="return injectAdminPassword(this)">
+                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                <button type="submit" class="btn-green" style="width: auto; padding: 10px 15px; margin-top: 0; background: #2196F3;">Start Signup</button>
+            </form>
+            <form action="/admin_start_tournament" method="POST" style="display:inline-block; margin-right: 5px;" onsubmit="return injectAdminPassword(this)">
+                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                <button type="submit" class="btn-green" style="width: auto; padding: 10px 15px; margin-top: 0; background: #FF5722;">Start Tournament</button>
+            </form>
+            
+            <form action="/admin_start_next_round" method="POST" style="display:inline-block; margin-right: 5px;" onsubmit="return injectAdminPassword(this)">
+                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                <button type="submit" class="btn-orange" style="width: auto; padding: 10px 15px; margin-top: 0;">Advance Round</button>
+            </form>
+            
+            <form action="/admin_end_tournament" method="POST" style="display:inline-block;" onsubmit="return injectAdminPassword(this)">
+                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                <button type="submit" class="btn-green" style="width: auto; padding: 10px 15px; margin-top: 0; background: #555;">Conclude</button>
+            </form>
+        </div>
+        
+        {% if tournament_state == 1 %}
+            <h3 style="color:#2196F3;">Tournament Signup is OPEN!</h3>
+            <p style="color:#bbb; font-size: 0.9em;">Signed Up ({{ signed_up_players | length }}): 
+                {% for player in signed_up_players %}
+                    <span style="color:#ddd; margin-right: 5px;">{{ player.name }}</span>
+                {% endfor %}
+            </p>
+            
+            <form action="/signup_for_tournament" method="POST">
+                <label style="display:block; text-align:left; color:#888; margin-top:10px;">Your Name</label>
+                <select name="player_id" required>
+                    <option value="" disabled selected>Select Your Name to Sign Up</option>
+                    {% for player in players %}
+                    <option value="{{ player.id }}">{{ player.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-green" style="background: #2196F3;">Sign Up</button>
+            </form>
+        
+        {% elif tournament_state >= 2 %}
+            {% if tournament_state == 2 %}
+            <h3 style="color:#4CAF50;">🏆 Tournament Bracket (Round {{ max_round_num }} Active)</h3>
+            {% else %}
+            <h3 style="color:#ff9800;">🏁 Tournament Concluded!</h3>
+            {% endif %}
+            
+            {% if all_tournament_matches %}
+            <div id="bracket-container">
+                <div id="bracket-rounds">
+                    {% set matches_by_round = all_tournament_matches | groupby('round_num') %}
+                    {% for round_num, matches in matches_by_round %}
+                        <div class="bracket-round">
+                            <h4 style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">Round {{ round_num }}</h4>
+                            <div class="round-matches">
+                                {% for match in matches %}
+                                    {% set is_completed = match.winner_id is not none %}
+                                    {% set is_current_round = match.round_num == max_round_num %}
+                                    
+                                    <div class="match-entry {% if is_completed %}completed{% elif not is_current_round %}future{% endif %}" id="match-{{ match.id }}">
+                                        <div class="match-header">
+                                            <strong>Match {{ match.match_num }} (Bo{{ match.best_of_games }})</strong>
+                                            <span class="match-status {% if is_completed %}completed{% elif not is_current_round %}future{% endif %}">
+                                                {% if is_completed %}
+                                                    COMPLETED
+                                                {% elif is_current_round %}
+                                                    PENDING
+                                                {% else %}
+                                                    TBD
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="match-players">
+                                            {{ match.player1.name if match.player1 else "TBD" }} 
+                                            <span class="vs">vs</span> 
+                                            {{ match.player2.name if match.player2 else "TBD" }}
+                                        </div>
+                                        
+                                        {% if is_completed %}
+                                            <div class="match-winner {% if match.score == 'BYE' %}bye{% endif %}">
+                                                Winner: {{ match.winner.name }} ({{ match.score }})
+                                            </div>
+                                        
+                                        {% elif is_current_round and match.player1 and match.player2 and tournament_state == 2 %}
+                                            <form action="/log_tournament_match/{{ match.id }}" method="POST">
+                                                 <label style="display:block; text-align:left; color:#888; font-size:0.8em;">Winner</label>
+                                                 <select name="winner_id" required style="padding: 8px;">
+                                                     <option value="" disabled selected>Select Winner</option>
+                                                     <option value="{{ match.player1.id }}">{{ match.player1.name }}</option>
+                                                     <option value="{{ match.player2.id }}">{{ match.player2.name }}</option>
+                                                 </select>
+                                                 <label style="display:block; text-align:left; color:#888; font-size:0.8em;">Score (e.g., 2-1)</label>
+                                                 <input type="text" name="score" placeholder="Game Score (e.g., 2-1)" style="padding: 8px;">
+                                                 <button type="submit" class="btn-green" style="padding: 10px; margin-top: 5px;">Log Match</button>
+                                             </form>
+                                             
+                                        {% elif is_current_round and match.player1 and not match.player2 %}
+                                            <p style="color:#ddd;">{{ match.player1.name }} received a BYE and advances automatically.</p>
+                                        
+                                        {% elif not is_current_round and (not match.player1 or not match.player2) %}
+                                            <p style="color:#888; font-size: 0.9em;">Players determined by winners of previous round.</p>
+                                            
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+                <p style="color:#888; font-style: italic;">No matches generated. Admin needs to press "Start Tournament".</p>
+            {% endif %}
+            
+            <p style="color:#bbb; font-size: 0.9em; margin-top: 15px;">
+                {% if tournament_state == 2 %}
+                    {% set incomplete_count = all_tournament_matches | selectattr('round_num', 'equalto', max_round_num) | selectattr('winner_id', 'none') | rejectattr('player2', 'none') | list | length %}
+                    {% if incomplete_count > 0 %}
+                        **{{ incomplete_count }}** pending match{{ 'es' if incomplete_count > 1 else '' }} in Round {{ max_round_num }}.
+                    {% else %}
+                        All matches for Round {{ max_round_num }} are completed. Please wait for next round to begin.
+                    {% endif %}
+                {% elif tournament_state == 3 %}
+                    Tournament concluded on {{ concluded_tournament.end_date.strftime('%B %d, %Y') if concluded_tournament and concluded_tournament.end_date else 'an unknown date' }}. The champion is <b>{{ concluded_tournament.winner.name if concluded_tournament and concluded_tournament.winner else 'TBD' }}</b>.
+                {% endif %}
+            </p>
+            
+        
+        {% else %}
+            <p style="color:#888;">No tournament currently active or scheduled. Check back later!</p>
+        {% endif %}
+
+    </div>
 
     <div class="card">
         <h2>🏆 Leaderboard</h2>
@@ -300,7 +491,6 @@
         {% for match in matches %}
         <div class="history-item">
             <div class="match-score-display">{{ match.score }}</div>
-            
             <div class="match-players-stack">
                 <div class="winner-info">
                     <strong style="color:#4CAF50">{{ match.winner.name }}</strong> 
@@ -326,13 +516,13 @@
         </div>
         {% endfor %}
     </div>
-
+    
     <script>
         // Store the admin password globally after successful modal entry
         let adminPassword = null;
         let clickCount = 0;
         let lastClickTime = 0;
-        const DOUBLE_CLICK_TIME = 300; // Max time in ms between clicks for a "triple-click"
+        const DOUBLE_CLICK_TIME = 300; 
 
         // Function to format UTC dates to EST/EDT
         function formatDatesToEst() {
@@ -341,29 +531,16 @@
                 month: 'short', day: 'numeric',
                 hour: 'numeric', minute: '2-digit', 
                 hour12: true,
-                timeZone: 'America/New_York', // Uses EST or EDT as appropriate
-                // timeZoneName: 'short',
+                timeZone: 'America/New_York', 
             };
 
             dateElements.forEach(el => {
                 const utcDateString = el.getAttribute('data-utc-date');
                 const targetSpan = el.querySelector('.js-local-datetime');
-
-                if (!utcDateString) {
-                    targetSpan.textContent = 'No date recorded';
-                    return;
-                }
-
+                if (!utcDateString) { targetSpan.textContent = 'No date recorded'; return; }
                 try {
-                    // Append 'Z' to ensure the browser treats the string as UTC
                     const date = new Date(utcDateString + 'Z'); 
-                    
-                    if (isNaN(date.getTime())) {
-                        targetSpan.textContent = 'Invalid Date Format';
-                        return;
-                    }
-
-                    // Format to EST/EDT
+                    if (isNaN(date.getTime())) { targetSpan.textContent = 'Invalid Date Format'; return; }
                     const estDateTime = date.toLocaleString('en-US', estOptions);
                     targetSpan.textContent = estDateTime;
                 } catch (e) {
@@ -376,8 +553,6 @@
 
         document.getElementById('pong-title').addEventListener('click', () => {
             const now = Date.now();
-            
-            // Check if the time gap since the last click is too long (reset the counter)
             if (now - lastClickTime > DOUBLE_CLICK_TIME) {
                 clickCount = 1;
             } else {
@@ -386,7 +561,7 @@
             lastClickTime = now;
 
             if (clickCount === 3) {
-                clickCount = 0; // Reset counter
+                clickCount = 0; 
                 document.getElementById('admin-login-modal').style.display = 'flex';
                 document.getElementById('modal-admin-password').value = '';
                 document.getElementById('modal-error-message').style.display = 'none';
@@ -399,7 +574,7 @@
             const password = passwordField.value;
             const errorMessage = document.getElementById('modal-error-message');
             errorMessage.style.display = 'none';
-            errorMessage.textContent = ''; // Clear previous errors
+            errorMessage.textContent = ''; 
 
             if (password.trim() === '') {
                 errorMessage.textContent = 'Password cannot be empty.';
@@ -410,31 +585,25 @@
             // 1. Send password to the server for immediate check
             fetch('/check_admin_password', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ admin_password: password })
             })
             .then(response => {
                 if (response.ok) {
-                    // 2. If successful (status 200), save password and show UI
                     adminPassword = password;
                     document.getElementById('admin-login-modal').style.display = 'none';
                     showAdminFeatures();
                 } else {
-                    // 3. If unsuccessful (status 401), show error message
                     return response.json().then(data => {
                         errorMessage.textContent = data.message || 'Login failed: Unknown error.';
                         errorMessage.style.display = 'block';
                     }).catch(() => {
-                         // Fallback for non-JSON errors
                          errorMessage.textContent = 'Server Error during login check.';
                          errorMessage.style.display = 'block';
                     });
                 }
             })
             .catch(error => {
-                // Network or CORS error
                 errorMessage.textContent = 'Network error during login check.';
                 errorMessage.style.display = 'block';
                 console.error('Error:', error);
@@ -457,19 +626,19 @@
             
             // Show the League Note Admin Card
             document.getElementById('note-admin-card').classList.remove('admin-hidden');
+            
+            // NEW: Show the Tournament Admin Controls
+            document.getElementById('tournament-admin-controls').classList.remove('admin-hidden');
         }
         
         function injectAdminPassword(form) {
-            // This function runs right before the form is submitted
             if (adminPassword) {
-                // Find the hidden input field and set its value
                 const hiddenField = form.querySelector('.admin-password-field-hidden');
                 if (hiddenField) {
                     hiddenField.value = adminPassword;
-                    return true; // Allow form submission
+                    return true; 
                 }
             }
-            // If the password wasn't set, block submission (shouldn't happen if buttons are hidden correctly)
             console.error("Admin password not set. Blocking submission.");
             return false; 
         }
@@ -501,7 +670,7 @@
             updateOpponentOptions('winner');
             updateOpponentOptions('loser');
 
-            // Hide the admin features initially by adding the class to the relevant elements
+            // Hide all admin features initially
             document.getElementById('admin-header').classList.add('admin-hidden');
             document.querySelectorAll('td[id^="player-admin-"]').forEach(el => {
                 el.classList.add('admin-hidden');
@@ -510,8 +679,8 @@
                 el.classList.add('admin-hidden');
             });
             document.getElementById('note-admin-card').classList.add('admin-hidden');
+            document.getElementById('tournament-admin-controls').classList.add('admin-hidden');
             
-            // Format dates to EST/EDT
             formatDatesToEst();
         });
     </script>
