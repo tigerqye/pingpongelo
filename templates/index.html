@@ -402,7 +402,7 @@
                 {% if tournament_state == 2 %}
                     {% set incomplete_count = all_tournament_matches | selectattr('round_num', 'equalto', max_round_num) | selectattr('winner_id', 'none') | rejectattr('player2', 'none') | list | length %}
                     {% if incomplete_count > 0 %}
-                        **{{ incomplete_count }}** pending match{{ 'es' if incomplete_count > 1 else '' }} in Round {{ max_round_num }}.
+                        <b>{{ incomplete_count }}</b> pending match{{ 'es' if incomplete_count > 1 else '' }} in Round {{ max_round_num }}.
                     {% else %}
                         All matches for Round {{ max_round_num }} are completed. Please wait for next round to begin.
                     {% endif %}
