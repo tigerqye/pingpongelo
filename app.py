@@ -178,11 +178,16 @@ def calculate_elo(winner_elo, loser_elo):
 # --- Routes ---
 @app.route('/')
 def index():
-    players = Player.query.order_by(Player.elo.desc()).all()
+    all_players = Player.query.order_by(Player.elo.desc()).all()
+    
+    # Separate players into active (W+L > 0) and inactive (W+L = 0)
+    active_players = [p for p in all_players if p.wins + p.losses > 0]
+    inactive_players = [p for p in all_players if p.wins + p.losses == 0]
+
     matches = Match.query.options(
         joinedload(Match.winner), 
         joinedload(Match.loser)
-    ).order_by(Match.date.desc()).limit(5).all()
+    ).order_by(Match.date.desc()).limit(10).all()
     
     config = LeagueConfig.query.get(1)
     admin_note = config.admin_note if config else ""
@@ -235,7 +240,8 @@ def index():
         return dt_object.strftime('%b %d, %H:%M')
 
     return render_template('index.html', 
-                           players=players, 
+                           players=active_players, # PASSING active_players as 'players' for compatibility
+                           inactive_players=inactive_players, # NEW: Passing inactive list
                            matches=matches,
                            admin_note=admin_note,
                            tournament_state=tournament_state,
