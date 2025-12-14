@@ -66,17 +66,26 @@
         }
 
         /* Admin Note Styling */
-        #league-note {
+        .top-banner {
             background: #3a3a3a;
-            color: #ffeb3b;
             padding: 10px 20px;
             border-radius: 8px;
             margin: 10px auto 20px auto;
             max-width: 600px;
             font-size: 0.9em;
             font-weight: 500;
-            border-left: 5px solid #ff9800;
             text-align: center;
+        }
+
+        #league-note {
+            color: #ffeb3b;
+            border-left: 5px solid #ff9800;
+            border-right: 5px solid #ff9800;
+        }
+
+        #last-match-banner {
+            border-left: 5px solid #4CAF50;
+            border-right: 5px solid #4CAF50;
         }
 
         /* Tournament Styles */
@@ -426,10 +435,12 @@
                     least 6 inches and strike it so it first hits their side of the table and then the opponent's side.
                     The serve must start from behind the end line.</li>
                 <li style="margin-bottom: 8px;"><strong>Change of Service:</strong> Service changes hands every
-                    <b>two</b> points.</li>
+                    <b>two</b> points.
+                </li>
                 <li style="margin-bottom: 8px;"><strong>Scoring:</strong> A game is won by the first player to reach
                     <b>11 points</b> and be at least <b>two points ahead</b> of the opponent. If the score is 10-10
-                    (deuce), service alternates after every point until one player gains a two-point lead.</li>
+                    (deuce), service alternates after every point until one player gains a two-point lead.
+                </li>
                 <li style="margin-bottom: 8px;"><strong>Legal Return:</strong> The ball must only be struck after it has
                     bounced once on your side. It must then travel directly over the net and bounce on the opponent's
                     side.</li>
@@ -475,9 +486,35 @@
     </div>
 
     {% if admin_note %}
-    <div id="league-note">
+    <div id="league-note" class="top-banner">
         📣 {{ admin_note }}
     </div>
+    {% else %}
+    {% if matches %}
+    {% set recent_match = matches[0] %}
+    <div id="last-match-banner" class="top-banner">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div style="white-space: nowrap;">
+                <span style="font-weight: bold; color: #e0e0e0; margin-right: 10px;">{{ recent_match.score }}</span>
+                <strong style="color:#4CAF50">{{ recent_match.winner.name }}</strong>
+                <span style="font-size: 0.8em; color: #aaa; margin-right: 15px;">
+                    ({{ recent_match.winner_pre_elo }}
+                    <span style="color: #4CAF50;">+{{ recent_match.winner_post_elo - recent_match.winner_pre_elo }}</span>)
+                </span>
+                {{ recent_match.loser.name }}
+                <span style="font-size: 0.8em; color: #aaa;">
+                    ({{ recent_match.loser_pre_elo }}
+                    <span style="color: #F44336;">{{ recent_match.loser_post_elo - recent_match.loser_pre_elo }}</span>)
+                </span>
+            </div>
+    
+            <div class="match-timestamp-container" style="text-align: right; margin-left: 15px; flex-shrink: 0;"
+                data-utc-date="{{ recent_match.date }}">
+                <span class="js-local-datetime">Loading...</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     {% endif %}
 
     <div class="card">
@@ -521,7 +558,7 @@
 
         {% if tournament_state == 1 %}
         <h3 style="color:#2196F3;">Tournament Signup is OPEN!</h3>
-        <p style="color:#bbb; font-size: 0.9em;">Signed Up ({{ signed_up_players | length }}):
+        <p style="color:#bbb; font-size: 0.9em;">Participants [{{ signed_up_players | length }}]:
             {% for player in signed_up_players %}
             <span style="color:#ddd; margin-right: 5px;">{{ player.name }}</span>
             {% endfor %}
