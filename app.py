@@ -483,7 +483,7 @@ def admin_start_next_round():
         p2_id = winners_ids[i * 2 + 1]
         
         # Check if this is the final match (i.e., only one match left in this round)
-        is_final_round = (num_matches + (1 if last_winner_gets_bye else 0) == 2) and next_round > 1
+        is_final_round = (num_matches + (1 if last_winner_gets_bye else 0) == 1) and next_round > 1
         best_of = 5 if is_final_round else 3
         
         new_match = TournamentMatch(

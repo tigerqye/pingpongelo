@@ -494,7 +494,7 @@
     {% set recent_match = matches[0] %}
     <div id="last-match-banner" class="top-banner">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <div style="white-space: nowrap;">
+            <div>
                 <span style="font-weight: bold; color: #e0e0e0; margin-right: 10px;">{{ recent_match.score }}</span>
                 <strong style="color:#4CAF50">{{ recent_match.winner.name }}</strong>
                 <span style="font-size: 0.8em; color: #aaa; margin-right: 15px;">
@@ -582,7 +582,8 @@
         {% if tournament_state == 2 %}
         <h3 style="color:#4CAF50;">🏆 Tournament Bracket (Round {{ max_round_num }} Active)</h3>
         {% else %}
-        <h3 style="color:#ff9800;">🏁 Tournament Concluded!</h3>
+        <h3 style="color:#ff9800;">🏆 Winner: {{concluded_tournament.winner.name if concluded_tournament and concluded_tournament.winner else 'TBD'}}</h3>
+
         {% endif %}
 
         {% if all_tournament_matches %}
@@ -591,9 +592,20 @@
                 {% set matches_by_round = all_tournament_matches | groupby('round_num') %}
                 {% for round_num, matches in matches_by_round %}
                 <div class="bracket-round">
-                    <h4
+                    {% if matches | length == 1 %}
+                        <h4
+                        style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
+                        Finals</h4>
+                    {% elif matches | length == 2 %}
+                        <h4
+                        style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
+                        Semifinals</h4>
+                    {% else %}
+                        <h4
                         style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
                         Round {{ round_num }}</h4>
+                    {% endif %}
+                    
                     <div class="round-matches">
                         {% for match in matches %}
                         {% set is_completed = match.winner_id is not none %}
@@ -675,9 +687,7 @@
             {% endif %}
             {% elif tournament_state == 3 %}
             Tournament concluded on {{ concluded_tournament.end_date.strftime('%B %d, %Y') if concluded_tournament and
-            concluded_tournament.end_date else 'an unknown date' }}. The champion is <b>{{
-                concluded_tournament.winner.name if concluded_tournament and concluded_tournament.winner else 'TBD'
-                }}</b>.
+            concluded_tournament.end_date else 'an unknown date' }}.
             {% endif %}
         </p>
 
