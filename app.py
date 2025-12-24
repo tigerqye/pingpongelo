@@ -409,7 +409,7 @@ def admin_end_tournament():
         return "Unauthorized: Incorrect admin password.", 401
     
     config = db.session.get(LeagueConfig, 1)
-    config.tournament_state = 3 # Concluded
+    config.tournament_state = 0 # Concluded
     db.session.commit()
     return redirect('/')
 

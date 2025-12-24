@@ -21,6 +21,46 @@
             color: #ffffff;
         }
 
+        #loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        /* Text Animation */
+        .loader-text {
+            font-size: 2.5em;
+            color: white;
+            margin: 0;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 1s forwards 0.5s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loader-hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
         /* Interactive Title and Icon Header */
         #header-container {
             display: flex;
@@ -36,6 +76,41 @@
             user-select: none;
             margin: 0;
             z-index: 10;
+        }
+
+        /* Floating Action Button (FAB) */
+        #fab-add-match {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            z-index: 999;
+            transition: transform 0.2s, background-color 0.2s;
+            border: none;
+        }
+
+        #fab-add-match:hover {
+            transform: scale(1.1);
+            background-color: #45a049;
+        }
+
+        /* Adjusting the existing modal styles to ensure the log form looks good */
+        .modal-content label {
+            display: block;
+            text-align: left;
+            color: #888;
+            margin-top: 10px;
+            font-size: 0.9em;
         }
 
         /* Rules icon */
@@ -409,6 +484,10 @@
 </head>
 
 <body>
+    <div id="loader-wrapper">
+        <h1 class="loader-text">🏓 Pong League</h1>
+    </div>
+    </div>
     <div id="admin-login-modal" class="modal">
         <div class="modal-content">
             <h2>Admin Access</h2>
@@ -499,7 +578,8 @@
                 <strong style="color:#4CAF50">{{ recent_match.winner.name }}</strong>
                 <span style="font-size: 0.8em; color: #aaa; margin-right: 15px;">
                     ({{ recent_match.winner_pre_elo }}
-                    <span style="color: #4CAF50;">+{{ recent_match.winner_post_elo - recent_match.winner_pre_elo }}</span>)
+                    <span style="color: #4CAF50;">+{{ recent_match.winner_post_elo - recent_match.winner_pre_elo
+                        }}</span>)
                 </span>
                 {{ recent_match.loser.name }}
                 <span style="font-size: 0.8em; color: #aaa;">
@@ -507,7 +587,7 @@
                     <span style="color: #F44336;">{{ recent_match.loser_post_elo - recent_match.loser_pre_elo }}</span>)
                 </span>
             </div>
-    
+
             <div class="match-timestamp-container" style="text-align: right; margin-left: 15px; flex-shrink: 0;"
                 data-utc-date="{{ recent_match.date }}">
                 <span class="js-local-datetime">Loading...</span>
@@ -582,7 +662,8 @@
         {% if tournament_state == 2 %}
         <h3 style="color:#4CAF50;">🏆 Tournament Bracket (Round {{ max_round_num }} Active)</h3>
         {% else %}
-        <h3 style="color:#ff9800;">🏆 Winner: {{concluded_tournament.winner.name if concluded_tournament and concluded_tournament.winner else 'TBD'}}</h3>
+        <h3 style="color:#ff9800;">🏆 Winner: {{concluded_tournament.winner.name if concluded_tournament and
+            concluded_tournament.winner else 'TBD'}}</h3>
 
         {% endif %}
 
@@ -593,19 +674,19 @@
                 {% for round_num, matches in matches_by_round %}
                 <div class="bracket-round">
                     {% if matches | length == 1 %}
-                        <h4
+                    <h4
                         style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
                         Finals</h4>
                     {% elif matches | length == 2 %}
-                        <h4
+                    <h4
                         style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
                         Semifinals</h4>
                     {% else %}
-                        <h4
+                    <h4
                         style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
                         Round {{ round_num }}</h4>
                     {% endif %}
-                    
+
                     <div class="round-matches">
                         {% for match in matches %}
                         {% set is_completed = match.winner_id is not none %}
@@ -762,36 +843,46 @@
 
     </div>
 
-    <div class="card">
-        <h2>📝 Log a Game</h2>
-        <form action="/log_match" method="POST">
-            <label style="display:block; text-align:left; color:#888; margin-top:10px;">Winner</label>
-            <select name="winner" id="winner-select" onchange="updateOpponentOptions('winner')" required>
-                <option value="" disabled selected>Select Winner</option>
-                {% for player in players %}
-                <option value="{{ player.id }}">{{ player.name }}</option>
-                {% endfor %}
-                {% for player in inactive_players %}
-                <option value="{{ player.id }}">{{ player.name }}</option>
-                {% endfor %}
-            </select>
+    <button id="fab-add-match" onclick="document.getElementById('log-match-modal').style.display='flex'">
+        +
+    </button>
 
-            <label style="display:block; text-align:left; color:#888; margin-top:10px;">Loser</label>
-            <select name="loser" id="loser-select" onchange="updateOpponentOptions('loser')" required>
-                <option value="" disabled selected>Select Loser</option>
-                {% for player in players %}
-                <option value="{{ player.id }}">{{ player.name }}</option>
-                {% endfor %}
-                {% for player in inactive_players %}
-                <option value="{{ player.id }}">{{ player.name }}</option>
-                {% endfor %}
-            </select>
+    <div id="log-match-modal" class="modal">
+        <div class="modal-content">
+            <h2>📝 Log Game</h2>
+            <form action="/log_match" method="POST">
+                <label>Winner</label>
+                <select name="winner" id="winner-select" onchange="updateOpponentOptions('winner')" required>
+                    <option value="" disabled selected>Select Winner</option>
+                    {% for player in players %}
+                    <option value="{{ player.id }}">{{ player.name }}</option>
+                    {% endfor %}
+                    {% for player in inactive_players %}
+                    <option value="{{ player.id }}">{{ player.name }}</option>
+                    {% endfor %}
+                </select>
 
-            <label style="display:block; text-align:left; color:#888; margin-top:10px;">Score (e.g., 21-18)</label>
-            <input type="text" name="score" placeholder="21-19">
+                <label>Loser</label>
+                <select name="loser" id="loser-select" onchange="updateOpponentOptions('loser')" required>
+                    <option value="" disabled selected>Select Loser</option>
+                    {% for player in players %}
+                    <option value="{{ player.id }}">{{ player.name }}</option>
+                    {% endfor %}
+                    {% for player in inactive_players %}
+                    <option value="{{ player.id }}">{{ player.name }}</option>
+                    {% endfor %}
+                </select>
 
-            <button type="submit" class="btn-green">Record Match</button>
-        </form>
+                <label>Score (e.g., 21-18)</label>
+                <input type="text" name="score" placeholder="21-19">
+
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button type="button" onclick="document.getElementById('log-match-modal').style.display='none'"
+                        style="background: #555; width: auto; margin-top: 0;">Cancel</button>
+                    <button type="submit" class="btn-green" style="width: auto; margin-top: 0;">Record Match</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div class="card">
@@ -1009,7 +1100,29 @@
             document.getElementById('tournament-admin-controls').classList.add('admin-hidden');
 
             formatDatesToEst();
+
+            window.addEventListener('load', () => {
+                const loader = document.getElementById('loader-wrapper');
+                // Display the full animation for 2 seconds
+                setTimeout(() => {
+                    if (loader) {
+                        loader.classList.add('loader-hidden');
+                    }
+                }, 2000);
+            });
         });
+
+        window.onclick = function (event) {
+            const logModal = document.getElementById('log-match-modal');
+            const adminModal = document.getElementById('admin-login-modal');
+            const rulesModal = document.getElementById('rules-modal');
+            const tournamentModal = document.getElementById('tournament-rules-modal');
+
+            if (event.target == logModal) logModal.style.display = "none";
+            if (event.target == adminModal) adminModal.style.display = "none";
+            if (event.target == rulesModal) rulesModal.style.display = "none";
+            if (event.target == tournamentModal) tournamentModal.style.display = "none";
+        }
     </script>
 </body>
 
