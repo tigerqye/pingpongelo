@@ -577,14 +577,11 @@
                 <span style="font-weight: bold; color: #e0e0e0; margin-right: 10px;">{{ recent_match.score }}</span>
                 <strong style="color:#4CAF50">{{ recent_match.winner.name }}</strong>
                 <span style="font-size: 0.8em; color: #aaa; margin-right: 15px;">
-                    ({{ recent_match.winner_pre_elo }}
-                    <span style="color: #4CAF50;">+{{ recent_match.winner_post_elo - recent_match.winner_pre_elo
-                        }}</span>)
+                    (<span style="color: #4CAF50;">+{{ recent_match.winner_post_elo - recent_match.winner_pre_elo}}</span>)
                 </span>
                 {{ recent_match.loser.name }}
                 <span style="font-size: 0.8em; color: #aaa;">
-                    ({{ recent_match.loser_pre_elo }}
-                    <span style="color: #F44336;">{{ recent_match.loser_post_elo - recent_match.loser_pre_elo }}</span>)
+                    (<span style="color: #F44336;">{{ recent_match.loser_post_elo - recent_match.loser_pre_elo}}</span>)
                 </span>
             </div>
 
