@@ -32,7 +32,7 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.8s ease, visibility 0.8s;
+            transition: opacity 0.5s ease, visibility 0.5s;
         }
 
         .loader-content {
@@ -46,7 +46,7 @@
             margin: 0;
             opacity: 0;
             transform: translateY(10px);
-            animation: fadeInUp 1s forwards 0.5s;
+            animation: fadeInUp 0.2s forwards 0.1s;
         }
 
         @keyframes fadeInUp {
@@ -1104,7 +1104,7 @@
                     if (loader) {
                         loader.classList.add('loader-hidden');
                     }
-                }, 2000);
+                }, 1000);
             });
         });
 
