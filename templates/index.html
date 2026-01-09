@@ -899,6 +899,35 @@
         </form>
     </div>
 
+    <div id="db-admin-card" class="card admin-hidden">
+        <h3>💾 Database Management</h3>
+        <p style="color: #bbb; font-size: 0.9em;">
+            Export the entire database for backup, or restore from a previous backup.
+            <br><strong style="color: #F44336;">WARNING: Importing will overwrite all current data!</strong>
+        </p>
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <!-- Export -->
+            <div style="flex: 1; min-width: 250px;">
+                <h4 style="margin-top: 0;">Export</h4>
+                <form action="/export_db" method="POST" onsubmit="return injectAdminPassword(this)">
+                    <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                    <button type="submit" class="btn-green" style="background: #2196F3;">Download Backup (ZIP)</button>
+                </form>
+            </div>
+
+            <!-- Import -->
+            <div style="flex: 1; min-width: 250px;">
+                <h4 style="margin-top: 0;">Import</h4>
+                <form action="/import_db" method="POST" enctype="multipart/form-data" onsubmit="return injectAdminPassword(this)">
+                    <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                    <input type="file" name="file" accept=".zip" required style="margin-bottom: 10px; padding: 10px; background: #333; color: white; border: 1px solid #444; border-radius: 6px; width: 100%;">
+                    <button type="submit" class="btn-orange" style="background: #FF5722;">Restore Database</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="card history">
         <h3>Recent Games</h3>
         {% for match in matches %}
@@ -1043,6 +1072,9 @@
 
             // NEW: Show the Tournament Admin Controls
             document.getElementById('tournament-admin-controls').classList.remove('admin-hidden');
+
+            // NEW: Show Database Management
+            document.getElementById('db-admin-card').classList.remove('admin-hidden');
         }
 
         function injectAdminPassword(form) {
@@ -1094,6 +1126,7 @@
             });
             document.getElementById('note-admin-card').classList.add('admin-hidden');
             document.getElementById('tournament-admin-controls').classList.add('admin-hidden');
+            document.getElementById('db-admin-card').classList.add('admin-hidden');
 
             formatDatesToEst();
 

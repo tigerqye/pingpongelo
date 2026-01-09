@@ -2,7 +2,11 @@ import os
 import random
 import math
 from datetime import datetime, date
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file
+import csv
+import io
+import zipfile
+from io import BytesIO, TextIOWrapper
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
@@ -573,6 +577,136 @@ def log_tournament_match(tmatch_id):
     db.session.commit()
     return redirect('/')
 
+
+
+# --- DATABASE EXPORT/IMPORT ---
+
+def get_all_models():
+    """Returns a list of all model classes to export/import."""
+    return [Player, Match, LeagueConfig, Tournament, TournamentSignup, TournamentMatch]
+
+@app.route('/export_db', methods=['POST'])
+def export_db():
+    if not check_admin_password(request.form.get('admin_password')):
+        return "Unauthorized: Incorrect admin password.", 401
+
+    memory_file = BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        models = get_all_models()
+        for model in models:
+            table_name = model.__tablename__
+            query = model.query.all()
+            
+            # Create a CSV in memory for this table
+            csv_buffer = io.StringIO()
+            writer = csv.writer(csv_buffer)
+            
+            # Write header (column names)
+            columns = [c.name for c in model.__table__.columns]
+            writer.writerow(columns)
+            
+            # Write rows
+            for record in query:
+                row_data = [getattr(record, col) for col in columns]
+                writer.writerow(row_data)
+            
+            # Add to zip
+            zf.writestr(f"{table_name}.csv", csv_buffer.getvalue())
+
+    memory_file.seek(0)
+    return send_file(
+        memory_file,
+        download_name='pong_league_backup.zip',
+        as_attachment=True
+    )
+
+@app.route('/import_db', methods=['POST'])
+def import_db():
+    if not check_admin_password(request.form.get('admin_password')):
+        return "Unauthorized: Incorrect admin password.", 401
+    
+    if 'file' not in request.files:
+        return "No file part", 400
+    file = request.files['file']
+    if file.filename == '':
+        return "No selected file", 400
+    
+    if file and file.filename.endswith('.zip'):
+        try:
+            with zipfile.ZipFile(file, 'r') as zf:
+                # 1. Clear existing data (Order matters due to foreign keys)
+                # Reverse order of dependency: child -> parent
+                start_fresh = True
+                if start_fresh:
+                    TournamentMatch.query.delete()
+                    TournamentSignup.query.delete()
+                    Tournament.query.delete()
+                    LeagueConfig.query.delete()
+                    Match.query.delete()
+                    Player.query.delete()
+                    db.session.commit()
+
+                # 2. Map filenames to models
+                # We need to import in dependency order: Parent -> Child
+                # Order: Player, LeagueConfig, Match, Tournament, TournamentSignup, TournamentMatch
+                
+                ordered_models = [Player, LeagueConfig, Match, Tournament, TournamentSignup, TournamentMatch]
+                
+                for model in ordered_models:
+                    table_name = model.__tablename__
+                    filename = f"{table_name}.csv"
+                    
+                    if filename in zf.namelist():
+                        with zf.open(filename) as csv_file:
+                            # Read CSV content
+                            csv_content = TextIOWrapper(csv_file, encoding='utf-8', newline='')
+                            reader = csv.DictReader(csv_content)
+                            
+                            # Get column types for this model
+                            columns = model.__table__.columns
+                            
+                            for row in reader:
+                                data = {}
+                                for key, value in row.items():
+                                    if value == '' or value is None:
+                                        data[key] = None
+                                    else:
+                                        # Convert to appropriate python type based on column type
+                                        col = columns.get(key)
+                                        if col is not None:
+                                            # Handle Date and DateTime
+                                            if isinstance(col.type, db.DateTime):
+                                                try:
+                                                    data[key] = datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
+                                                except ValueError:
+                                                     # Fallback for dates without microseconds or other formats
+                                                     try:
+                                                         data[key] = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+                                                     except:
+                                                         data[key] = value # Let SQLAlchemy try or fail
+                                            elif isinstance(col.type, db.Date):
+                                                try:
+                                                    data[key] = datetime.strptime(value, '%Y-%m-%d').date()
+                                                except:
+                                                    data[key] = value
+                                            else:
+                                                data[key] = value
+                                        else:
+                                            data[key] = value
+                                        
+                                # Create instance and merge (or add)
+                                instance = model(**data)
+                                db.session.add(instance)
+                            
+                            db.session.commit() # Commit after each table to satisfy FKs for next table
+                            
+            return redirect('/')
+        except Exception as e:
+            # log the error to console for debugging
+            print(f"Import Error: {e}")
+            return f"Error importing database: {str(e)}", 500
+    else:
+         return "Invalid file type. Please upload a .zip file.", 400
 
 def init_db():
     """Initializes the database structure and ensures a LeagueConfig entry exists."""
