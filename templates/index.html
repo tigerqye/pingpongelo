@@ -81,8 +81,9 @@
         /* Floating Action Button (FAB) */
         #fab-add-match {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            bottom: 80px;
+            /* Above bottom nav */
+            right: 20px;
             width: 60px;
             height: 60px;
             background-color: #4CAF50;
@@ -479,6 +480,75 @@
             display: flex;
             justify-content: flex-end;
         }
+
+        /* --- TAB LAYOUT STYLES --- */
+        body {
+            padding-bottom: 70px;
+            /* Space for bottom nav */
+            overflow-x: hidden;
+            /* Prevent horizontal scroll on body */
+        }
+
+        #main-view {
+            width: 100%;
+            overflow: hidden;
+            /* Hide overflowing tabs */
+            position: relative;
+        }
+
+        #tab-container {
+            display: flex;
+            width: 300%;
+            /* 3 tabs * 100% */
+            transition: transform 0.3s ease-out;
+        }
+
+        .tab-page {
+            width: 33.3333%;
+            flex-shrink: 0;
+            padding: 0 5px;
+            /* Tiny bit of padding */
+            box-sizing: border-box;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: #1e1e1e;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #333;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.75em;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            transition: color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-item.active {
+            color: #4CAF50;
+        }
+
+        .nav-icon {
+            font-size: 1.5em;
+            margin-bottom: 2px;
+        }
     </style>
 </head>
 
@@ -558,287 +628,7 @@
         </div>
     </div>
 
-    <div id="header-container">
-        <h1 id="pong-title">🏓 Pong League</h1>
-        <span id="rules-icon" onclick="document.getElementById('rules-modal').style.display='flex'">i</span>
-    </div>
-
-    {% if admin_note %}
-    <div id="league-note" class="top-banner">
-        📣 {{ admin_note }}
-    </div>
-    {% else %}
-    {% if matches %}
-    {% set recent_match = matches[0] %}
-    <div id="last-match-banner" class="top-banner">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <div>
-                <span style="font-weight: bold; color: #e0e0e0; margin-right: 10px;">{{ recent_match.score }}</span>
-                <strong style="color:#4CAF50">{{ recent_match.winner.name }}</strong>
-                <span style="font-size: 0.8em; color: #aaa; margin-right: 15px;">
-                    (<span style="color: #4CAF50;">+{{ recent_match.winner_post_elo - recent_match.winner_pre_elo}}</span>)
-                </span>
-                {{ recent_match.loser.name }}
-                <span style="font-size: 0.8em; color: #aaa;">
-                    (<span style="color: #F44336;">{{ recent_match.loser_post_elo - recent_match.loser_pre_elo}}</span>)
-                </span>
-            </div>
-
-            <div class="match-timestamp-container" style="text-align: right; margin-left: 15px; flex-shrink: 0;"
-                data-utc-date="{{ recent_match.date }}">
-                <span class="js-local-datetime">Loading...</span>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    <div class="card">
-        <div id="header-container">
-            <h2>🏅 Tournament Hub</h2>
-            <span id="rules-icon"
-                onclick="document.getElementById('tournament-rules-modal').style.display='flex'">i</span>
-        </div>
-
-        <div id="tournament-admin-controls" class="admin-hidden"
-            style="margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 15px;">
-            <p style="color: #bbb; font-size: 0.9em;">Admin Mode: Change Tournament State</p>
-            <form action="/admin_start_signup" method="POST" style="display:inline-block; margin-right: 5px;"
-                onsubmit="return injectAdminPassword(this)">
-                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                <button type="submit" class="btn-green"
-                    style="width: auto; padding: 10px 15px; margin-top: 0; background: #2196F3;">Start Signup</button>
-            </form>
-            <form action="/admin_start_tournament" method="POST" style="display:inline-block; margin-right: 5px;"
-                onsubmit="return injectAdminPassword(this)">
-                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                <button type="submit" class="btn-green"
-                    style="width: auto; padding: 10px 15px; margin-top: 0; background: #FF5722;">Start
-                    Tournament</button>
-            </form>
-
-            <form action="/admin_start_next_round" method="POST" style="display:inline-block; margin-right: 5px;"
-                onsubmit="return injectAdminPassword(this)">
-                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                <button type="submit" class="btn-orange" style="width: auto; padding: 10px 15px; margin-top: 0;">Advance
-                    Round</button>
-            </form>
-
-            <form action="/admin_end_tournament" method="POST" style="display:inline-block;"
-                onsubmit="return injectAdminPassword(this)">
-                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                <button type="submit" class="btn-green"
-                    style="width: auto; padding: 10px 15px; margin-top: 0; background: #555;">Conclude</button>
-            </form>
-        </div>
-
-        {% if tournament_state == 1 %}
-        <h3 style="color:#2196F3;">Tournament Signup is OPEN!</h3>
-        <p style="color:#bbb; font-size: 0.9em;">Participants [{{ signed_up_players | length }}]:
-            {% for player in signed_up_players %}
-            <span style="color:#ddd; margin-right: 5px;">{{ player.name }}</span>
-            {% endfor %}
-        </p>
-
-        <form action="/signup_for_tournament" method="POST">
-            <label style="display:block; text-align:left; color:#888; margin-top:10px;">Your Name</label>
-            <select name="player_id" required>
-                <option value="" disabled selected>Select Your Name to Sign Up</option>
-                {% for player in players %}
-                <option value="{{ player.id }}">{{ player.name }}</option>
-                {% endfor %}
-                {% for player in inactive_players %}
-                <option value="{{ player.id }}">{{ player.name }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn-green" style="background: #2196F3;">Sign Up</button>
-        </form>
-
-        {% elif tournament_state >= 2 %}
-        {% if tournament_state == 2 %}
-        <h3 style="color:#4CAF50;">🏆 Tournament Bracket (Round {{ max_round_num }} Active)</h3>
-        {% else %}
-        <h3 style="color:#ff9800;">🏆 Winner: {{concluded_tournament.winner.name if concluded_tournament and
-            concluded_tournament.winner else 'TBD'}}</h3>
-
-        {% endif %}
-
-        {% if all_tournament_matches %}
-        <div id="bracket-container">
-            <div id="bracket-rounds">
-                {% set matches_by_round = all_tournament_matches | groupby('round_num') %}
-                {% for round_num, matches in matches_by_round %}
-                <div class="bracket-round">
-                    {% if matches | length == 1 %}
-                    <h4
-                        style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
-                        Finals</h4>
-                    {% elif matches | length == 2 %}
-                    <h4
-                        style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
-                        Semifinals</h4>
-                    {% else %}
-                    <h4
-                        style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
-                        Round {{ round_num }}</h4>
-                    {% endif %}
-
-                    <div class="round-matches">
-                        {% for match in matches %}
-                        {% set is_completed = match.winner_id is not none %}
-                        {% set is_current_round = match.round_num == max_round_num %}
-
-                        <div class="match-entry {% if is_completed %}completed{% elif not is_current_round %}future{% endif %}"
-                            id="match-{{ match.id }}">
-                            <div class="match-header">
-                                <strong>Match {{ match.match_num }} (Bo{{ match.best_of_games }})</strong>
-                                <span
-                                    class="match-status {% if is_completed %}completed{% elif not is_current_round %}future{% endif %}">
-                                    {% if is_completed %}
-                                    COMPLETED
-                                    {% elif is_current_round %}
-                                    PENDING
-                                    {% else %}
-                                    TBD
-                                    {% endif %}
-                                </span>
-                            </div>
-
-                            <div class="match-players">
-                                {{ match.player1.name if match.player1 else "TBD" }}
-                                <span class="vs">vs</span>
-                                {{ match.player2.name if match.player2 else "TBD" }}
-                            </div>
-
-                            {% if is_completed %}
-                            <div class="match-winner {% if match.score == 'BYE' %}bye{% endif %}">
-                                Winner: {{ match.winner.name }} ({{ match.score }})
-                            </div>
-
-                            {% elif is_current_round and match.player1 and match.player2 and tournament_state == 2 %}
-                            <form action="/log_tournament_match/{{ match.id }}" method="POST">
-                                <label
-                                    style="display:block; text-align:left; color:#888; font-size:0.8em;">Winner</label>
-                                <select name="winner_id" required style="padding: 8px;">
-                                    <option value="" disabled selected>Select Winner</option>
-                                    <option value="{{ match.player1.id }}">{{ match.player1.name }}</option>
-                                    <option value="{{ match.player2.id }}">{{ match.player2.name }}</option>
-                                </select>
-                                <label style="display:block; text-align:left; color:#888; font-size:0.8em;">Score (e.g.,
-                                    2-1)</label>
-                                <input type="text" name="score" placeholder="Game Score (e.g., 2-1)"
-                                    style="padding: 8px;">
-                                <button type="submit" class="btn-green" style="padding: 10px; margin-top: 5px;">Log
-                                    Match</button>
-                            </form>
-
-                            {% elif is_current_round and match.player1 and not match.player2 %}
-                            <p style="color:#ddd;">{{ match.player1.name }} received a BYE and advances automatically.
-                            </p>
-
-                            {% elif not is_current_round and (not match.player1 or not match.player2) %}
-                            <p style="color:#888; font-size: 0.9em;">Players determined by winners of previous round.
-                            </p>
-
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% else %}
-        <p style="color:#888; font-style: italic;">No matches generated. Admin needs to press "Start Tournament".</p>
-        {% endif %}
-
-        <p style="color:#bbb; font-size: 0.9em; margin-top: 15px;">
-            {% if tournament_state == 2 %}
-            {% set incomplete_count = all_tournament_matches | selectattr('round_num', 'equalto', max_round_num) |
-            selectattr('winner_id', 'none') | rejectattr('player2', 'none') | list | length %}
-            {% if incomplete_count > 0 %}
-            <b>{{ incomplete_count }}</b> pending match{{ 'es' if incomplete_count > 1 else '' }} in Round {{
-            max_round_num }}.
-            {% else %}
-            All matches for Round {{ max_round_num }} are completed. Please wait for next round to begin.
-            {% endif %}
-            {% elif tournament_state == 3 %}
-            Tournament concluded on {{ concluded_tournament.end_date.strftime('%B %d, %Y') if concluded_tournament and
-            concluded_tournament.end_date else 'an unknown date' }}.
-            {% endif %}
-        </p>
-
-
-        {% else %}
-        <p style="color:#888;">No tournament currently active or scheduled. Check back later!</p>
-        {% endif %}
-
-    </div>
-
-    <div class="card">
-        <h2>🏆 Leaderboard</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>W/L</th>
-                    <th>Elo</th>
-                    <th id="admin-header" class="admin-hidden">Admin</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for player in players %}
-                <tr>
-                    <td class="rank">{{ loop.index }}</td>
-                    <td>{{ player.name }}</td>
-                    <td style="font-size: 0.8em; color: #777;">{{ player.wins }}-{{ player.losses }}</td>
-                    <td class="elo">{{ player.elo }}</td>
-                    <td id="player-admin-{{ player.id }}" class="admin-hidden" style="width: 120px;">
-                        <form action="/remove_player/{{ player.id }}" method="POST" style="margin:0;"
-                            onsubmit="return injectAdminPassword(this)">
-                            <div class="admin-password-container">
-                                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                                <button type="submit" class="remove-btn">Remove Player</button>
-                            </div>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-
-            <td colspan="5">
-                <div style="margin: 5px 0; display: flex; align-items: center;">
-                    <hr style="flex-grow: 1; border: none; border-top: 3px solid #888;">
-                    <span style="color: #888; padding: 0 8px; font-size: 12px; font-weight: bold">unranked</span>
-                    <hr style="flex-grow: 1; border: none; border-top: 3px solid #888;">
-                </div>
-            </td>
-
-            {% if inactive_players %}
-            <tbody>
-                {% for player in inactive_players %}
-                <tr>
-                    <td class="rank">-</td>
-                    <td>{{ player.name }}</td>
-                    <td style="font-size: 0.8em; color: #777;">{{ player.wins }}-{{ player.losses }}</td>
-                    <td class="elo">{{ player.elo }}</td>
-                    <td id="player-admin-{{ player.id }}" class="admin-hidden" style="width: 120px;">
-                        <form action="/remove_player/{{ player.id }}" method="POST" style="margin:0;"
-                            onsubmit="return injectAdminPassword(this)">
-                            <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                            <button type="submit" class="remove-btn">Remove Player</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            {% endif %}
-        </table>
-
-
-    </div>
-
+    <!-- MOVED FAB AND MODAL HERE -->
     <button id="fab-add-match" onclick="document.getElementById('log-match-modal').style.display='flex'">
         +
     </button>
@@ -881,83 +671,423 @@
         </div>
     </div>
 
-    <div class="card">
-        <h3>Add New Player</h3>
-        <form action="/add_player" method="POST">
-            <input type="text" name="name" placeholder="Player Name" required>
-            <button type="submit" style="background: #555;">Add Player</button>
-        </form>
+    <div id="header-container">
+        <h1 id="pong-title">🏓 Pong League</h1>
+        <span id="rules-icon" onclick="document.getElementById('rules-modal').style.display='flex'">i</span>
     </div>
 
-    <div id="note-admin-card" class="card admin-hidden">
-        <h3>📢 Update League Note</h3>
-        <form action="/update_admin_note" method="POST" onsubmit="return injectAdminPassword(this)">
-            <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-            <input type="text" name="admin_note" id="admin-note-input"
-                placeholder="Enter announcement text (Leave empty to hide)" value="{{ admin_note | default('') }}">
-            <button type="submit" class="btn-green" style="background: #ff9800;">Save Note</button>
-        </form>
+    {% if admin_note %}
+    <div id="league-note" class="top-banner">
+        📣 {{ admin_note }}
     </div>
-
-    <div id="db-admin-card" class="card admin-hidden">
-        <h3>💾 Database Management</h3>
-        <p style="color: #bbb; font-size: 0.9em;">
-            Export the entire database for backup, or restore from a previous backup.
-            <br><strong style="color: #F44336;">WARNING: Importing will overwrite all current data!</strong>
-        </p>
-        
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <!-- Export -->
-            <div style="flex: 1; min-width: 250px;">
-                <h4 style="margin-top: 0;">Export</h4>
-                <form action="/export_db" method="POST" onsubmit="return injectAdminPassword(this)">
-                    <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                    <button type="submit" class="btn-green" style="background: #2196F3;">Download Backup (ZIP)</button>
-                </form>
+    {% else %}
+    {% if matches %}
+    {% set recent_match = matches[0] %}
+    <div id="last-match-banner" class="top-banner">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+                <span style="font-weight: bold; color: #e0e0e0; margin-right: 10px;">{{ recent_match.score }}</span>
+                <strong style="color:#4CAF50">{{ recent_match.winner.name }}</strong>
+                <span style="font-size: 0.8em; color: #aaa; margin-right: 15px;">
+                    (<span style="color: #4CAF50;">+{{ recent_match.winner_post_elo -
+                        recent_match.winner_pre_elo}}</span>)
+                </span>
+                {{ recent_match.loser.name }}
+                <span style="font-size: 0.8em; color: #aaa;">
+                    (<span style="color: #F44336;">{{ recent_match.loser_post_elo - recent_match.loser_pre_elo}}</span>)
+                </span>
             </div>
 
-            <!-- Import -->
-            <div style="flex: 1; min-width: 250px;">
-                <h4 style="margin-top: 0;">Import</h4>
-                <form action="/import_db" method="POST" enctype="multipart/form-data" onsubmit="return injectAdminPassword(this)">
-                    <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                    <input type="file" name="file" accept=".zip" required style="margin-bottom: 10px; padding: 10px; background: #333; color: white; border: 1px solid #444; border-radius: 6px; width: 100%;">
-                    <button type="submit" class="btn-orange" style="background: #FF5722;">Restore Database</button>
-                </form>
+            <div class="match-timestamp-container" style="text-align: right; margin-left: 15px; flex-shrink: 0;"
+                data-utc-date="{{ recent_match.date }}">
+                <span class="js-local-datetime">Loading...</span>
             </div>
         </div>
     </div>
+    {% endif %}
+    {% endif %}
 
-    <div class="card history">
-        <h3>Recent Games</h3>
-        {% for match in matches %}
-        <div class="history-item">
-            <div class="match-score-display">{{ match.score }}</div>
-            <div class="match-players-stack">
-                <div class="winner-info">
-                    <strong style="color:#4CAF50">{{ match.winner.name }}</strong>
-                    <span style="font-size: 0.8em; color: #aaa;">({{ match.winner_pre_elo }}
-                        <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo }}</span>)</span>
-                </div>
-                <div class="loser-info">
-                    {{ match.loser.name }}
-                    <span style="font-size: 0.8em; color: #aaa;">({{ match.loser_pre_elo }}
-                        <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo }}</span>)</span>
-                </div>
-            </div>
+    <!-- Tabs Layout -->
+    <div id="main-view">
+        <div id="tab-container">
 
-            <div class="match-actions-and-date">
-                <div class="match-timestamp-container" data-utc-date="{{ match.date }}">
-                    <span class="js-local-datetime">Loading...</span>
+            <!-- TAB 1: TOURNAMENT -->
+            <div class="tab-page" id="tab-tournament">
+                <div class="card">
+                    <div id="header-container">
+                        <h2>🏆 Tournament Hub</h2>
+                        <span id="rules-icon"
+                            onclick="document.getElementById('tournament-rules-modal').style.display='flex'">i</span>
+                    </div>
+
+                    <div id="tournament-admin-controls" class="admin-hidden"
+                        style="margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 15px;">
+                        <p style="color: #bbb; font-size: 0.9em;">Admin Mode: Change Tournament State</p>
+                        <form action="/admin_start_signup" method="POST"
+                            style="display:inline-block; margin-right: 5px;"
+                            onsubmit="return injectAdminPassword(this)">
+                            <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                            <button type="submit" class="btn-green"
+                                style="width: auto; padding: 10px 15px; margin-top: 0; background: #2196F3;">Start
+                                Signup</button>
+                        </form>
+                        <form action="/admin_start_tournament" method="POST"
+                            style="display:inline-block; margin-right: 5px;"
+                            onsubmit="return injectAdminPassword(this)">
+                            <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                            <button type="submit" class="btn-green"
+                                style="width: auto; padding: 10px 15px; margin-top: 0; background: #FF5722;">Start
+                                Tournament</button>
+                        </form>
+
+                        <form action="/admin_start_next_round" method="POST"
+                            style="display:inline-block; margin-right: 5px;"
+                            onsubmit="return injectAdminPassword(this)">
+                            <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                            <button type="submit" class="btn-orange"
+                                style="width: auto; padding: 10px 15px; margin-top: 0;">Advance
+                                Round</button>
+                        </form>
+
+                        <form action="/admin_end_tournament" method="POST" style="display:inline-block;"
+                            onsubmit="return injectAdminPassword(this)">
+                            <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                            <button type="submit" class="btn-green"
+                                style="width: auto; padding: 10px 15px; margin-top: 0; background: #555;">Conclude</button>
+                        </form>
+                    </div>
+
+                    {% if tournament_state == 1 %}
+                    <h3 style="color:#2196F3;">Tournament Signup is OPEN!</h3>
+                    <p style="color:#bbb; font-size: 0.9em;">Participants [{{ signed_up_players | length }}]:
+                        {% for player in signed_up_players %}
+                        <span style="color:#ddd; margin-right: 5px;">{{ player.name }}</span>
+                        {% endfor %}
+                    </p>
+
+                    <form action="/signup_for_tournament" method="POST">
+                        <label style="display:block; text-align:left; color:#888; margin-top:10px;">Your Name</label>
+                        <select name="player_id" required>
+                            <option value="" disabled selected>Select Your Name to Sign Up</option>
+                            {% for player in players %}
+                            <option value="{{ player.id }}">{{ player.name }}</option>
+                            {% endfor %}
+                            {% for player in inactive_players %}
+                            <option value="{{ player.id }}">{{ player.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn-green" style="background: #2196F3;">Sign Up</button>
+                    </form>
+
+                    {% elif tournament_state >= 2 %}
+                    {% if tournament_state == 2 %}
+                    <h3 style="color:#4CAF50;">🏆 Tournament Bracket (Round {{ max_round_num }} Active)</h3>
+                    {% else %}
+                    <h3 style="color:#ff9800;">🏆 Winner: {{concluded_tournament.winner.name if concluded_tournament and
+                        concluded_tournament.winner else 'TBD'}}</h3>
+
+                    {% endif %}
+
+                    {% if all_tournament_matches %}
+                    <div id="bracket-container">
+                        <div id="bracket-rounds">
+                            {% set matches_by_round = all_tournament_matches | groupby('round_num') %}
+                            {% for round_num, matches in matches_by_round %}
+                            <div class="bracket-round">
+                                {% if matches | length == 1 %}
+                                <h4
+                                    style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
+                                    Finals</h4>
+                                {% elif matches | length == 2 %}
+                                <h4
+                                    style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
+                                    Semifinals</h4>
+                                {% else %}
+                                <h4
+                                    style="margin-bottom: 5px; color: {% if round_num == max_round_num and tournament_state == 2 %} #ffeb3b {% else %} #ccc {% endif %};">
+                                    Round {{ round_num }}</h4>
+                                {% endif %}
+
+                                <div class="round-matches">
+                                    {% for match in matches %}
+                                    {% set is_completed = match.winner_id is not none %}
+                                    {% set is_current_round = match.round_num == max_round_num %}
+
+                                    <div class="match-entry {% if is_completed %}completed{% elif not is_current_round %}future{% endif %}"
+                                        id="match-{{ match.id }}">
+                                        <div class="match-header">
+                                            <strong>Match {{ match.match_num }} (Bo{{ match.best_of_games }})</strong>
+                                            <span
+                                                class="match-status {% if is_completed %}completed{% elif not is_current_round %}future{% endif %}">
+                                                {% if is_completed %}
+                                                COMPLETED
+                                                {% elif is_current_round %}
+                                                PENDING
+                                                {% else %}
+                                                TBD
+                                                {% endif %}
+                                            </span>
+                                        </div>
+
+                                        <div class="match-players">
+                                            {{ match.player1.name if match.player1 else "TBD" }}
+                                            <span class="vs">vs</span>
+                                            {{ match.player2.name if match.player2 else "TBD" }}
+                                        </div>
+
+                                        {% if is_completed %}
+                                        <div class="match-winner {% if match.score == 'BYE' %}bye{% endif %}">
+                                            Winner: {{ match.winner.name }} ({{ match.score }})
+                                        </div>
+
+                                        {% elif is_current_round and match.player1 and match.player2 and
+                                        tournament_state == 2 %}
+                                        <form action="/log_tournament_match/{{ match.id }}" method="POST">
+                                            <label
+                                                style="display:block; text-align:left; color:#888; font-size:0.8em;">Winner</label>
+                                            <select name="winner_id" required style="padding: 8px;">
+                                                <option value="" disabled selected>Select Winner</option>
+                                                <option value="{{ match.player1.id }}">{{ match.player1.name }}</option>
+                                                <option value="{{ match.player2.id }}">{{ match.player2.name }}</option>
+                                            </select>
+                                            <label
+                                                style="display:block; text-align:left; color:#888; font-size:0.8em;">Score
+                                                (e.g.,
+                                                2-1)</label>
+                                            <input type="text" name="score" placeholder="Game Score (e.g., 2-1)"
+                                                style="padding: 8px;">
+                                            <button type="submit" class="btn-green"
+                                                style="padding: 10px; margin-top: 5px;">Log
+                                                Match</button>
+                                        </form>
+
+                                        {% elif is_current_round and match.player1 and not match.player2 %}
+                                        <p style="color:#ddd;">{{ match.player1.name }} received a BYE and advances
+                                            automatically.
+                                        </p>
+
+                                        {% elif not is_current_round and (not match.player1 or not match.player2) %}
+                                        <p style="color:#888; font-size: 0.9em;">Players determined by winners of
+                                            previous round.
+                                        </p>
+
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color:#888; font-style: italic;">No matches generated. Admin needs to press "Start
+                        Tournament".</p>
+                    {% endif %}
+
+                    <p style="color:#bbb; font-size: 0.9em; margin-top: 15px;">
+                        {% if tournament_state == 2 %}
+                        {% set incomplete_count = all_tournament_matches | selectattr('round_num', 'equalto',
+                        max_round_num) |
+                        selectattr('winner_id', 'none') | rejectattr('player2', 'none') | list | length %}
+                        {% if incomplete_count > 0 %}
+                        <b>{{ incomplete_count }}</b> pending match{{ 'es' if incomplete_count > 1 else '' }} in Round
+                        {{
+                        max_round_num }}.
+                        {% else %}
+                        All matches for Round {{ max_round_num }} are completed. Please wait for next round to begin.
+                        {% endif %}
+                        {% elif tournament_state == 3 %}
+                        Tournament concluded on {{ concluded_tournament.end_date.strftime('%B %d, %Y') if
+                        concluded_tournament and
+                        concluded_tournament.end_date else 'an unknown date' }}.
+                        {% endif %}
+                    </p>
+
+
+                    {% else %}
+                    <p style="color:#888;">No tournament currently active or scheduled. Check back later!</p>
+                    {% endif %}
+
                 </div>
-                <form id="match-admin-{{ match.id }}" class="admin-hidden" action="/remove_match/{{ match.id }}"
-                    method="POST" style="margin:0; width: 120px;" onsubmit="return injectAdminPassword(this)">
-                    <input type="hidden" name="admin_password" class="admin-password-field-hidden">
-                    <button type="submit" class="remove-btn">Revert Match</button>
-                </form>
-            </div>
+            </div> <!-- End Tab 1 -->
+
+            <!-- TAB 2: LEADERBOARD -->
+            <div class="tab-page" id="tab-leaderboard">
+                <div class="card">
+                    <h2>🏅 Leaderboard</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>W/L</th>
+                                <th>Elo</th>
+                                <th id="admin-header" class="admin-hidden">Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in players %}
+                            <tr>
+                                <td class="rank">{{ loop.index }}</td>
+                                <td>{{ player.name }}</td>
+                                <td style="font-size: 0.8em; color: #777;">{{ player.wins }}-{{ player.losses }}</td>
+                                <td class="elo">{{ player.elo }}</td>
+                                <td id="player-admin-{{ player.id }}" class="admin-hidden" style="width: 120px;">
+                                    <form action="/remove_player/{{ player.id }}" method="POST" style="margin:0;"
+                                        onsubmit="return injectAdminPassword(this)">
+                                        <div class="admin-password-container">
+                                            <input type="hidden" name="admin_password"
+                                                class="admin-password-field-hidden">
+                                            <button type="submit" class="remove-btn">Remove Player</button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                        <td colspan="5">
+                            <div style="margin: 5px 0; display: flex; align-items: center;">
+                                <hr style="flex-grow: 1; border: none; border-top: 3px solid #888;">
+                                <span
+                                    style="color: #888; padding: 0 8px; font-size: 12px; font-weight: bold">unranked</span>
+                                <hr style="flex-grow: 1; border: none; border-top: 3px solid #888;">
+                            </div>
+                        </td>
+
+                        {% if inactive_players %}
+                        <tbody>
+                            {% for player in inactive_players %}
+                            <tr>
+                                <td class="rank">-</td>
+                                <td>{{ player.name }}</td>
+                                <td style="font-size: 0.8em; color: #777;">{{ player.wins }}-{{ player.losses }}</td>
+                                <td class="elo">{{ player.elo }}</td>
+                                <td id="player-admin-{{ player.id }}" class="admin-hidden" style="width: 120px;">
+                                    <form action="/remove_player/{{ player.id }}" method="POST" style="margin:0;"
+                                        onsubmit="return injectAdminPassword(this)">
+                                        <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                                        <button type="submit" class="remove-btn">Remove Player</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% endif %}
+                    </table>
+
+
+                </div>
+
+
+
+                <div class="card">
+                    <h3>Add New Player</h3>
+                    <form action="/add_player" method="POST">
+                        <input type="text" name="name" placeholder="Player Name" required>
+                        <button type="submit" style="background: #555;">Add Player</button>
+                    </form>
+                </div>
+
+                <div id="note-admin-card" class="card admin-hidden">
+                    <h3>📢 Update League Note</h3>
+                    <form action="/update_admin_note" method="POST" onsubmit="return injectAdminPassword(this)">
+                        <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                        <input type="text" name="admin_note" id="admin-note-input"
+                            placeholder="Enter announcement text (Leave empty to hide)"
+                            value="{{ admin_note | default('') }}">
+                        <button type="submit" class="btn-green" style="background: #ff9800;">Save Note</button>
+                    </form>
+                </div>
+
+                <div id="db-admin-card" class="card admin-hidden">
+                    <h3>💾 Database Management</h3>
+                    <p style="color: #bbb; font-size: 0.9em;">
+                        Export the entire database for backup, or restore from a previous backup.
+                        <br><strong style="color: #F44336;">WARNING: Importing will overwrite all current data!</strong>
+                    </p>
+
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <!-- Export -->
+                        <div style="flex: 1; min-width: 250px;">
+                            <h4 style="margin-top: 0;">Export</h4>
+                            <form action="/export_db" method="POST" onsubmit="return injectAdminPassword(this)">
+                                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                                <button type="submit" class="btn-green" style="background: #2196F3;">Download Backup
+                                    (ZIP)</button>
+                            </form>
+                        </div>
+
+                        <!-- Import -->
+                        <div style="flex: 1; min-width: 250px;">
+                            <h4 style="margin-top: 0;">Import</h4>
+                            <form action="/import_db" method="POST" enctype="multipart/form-data"
+                                onsubmit="return injectAdminPassword(this)">
+                                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                                <input type="file" name="file" accept=".zip" required
+                                    style="margin-bottom: 10px; padding: 10px; background: #333; color: white; border: 1px solid #444; border-radius: 6px; width: 100%;">
+                                <button type="submit" class="btn-orange" style="background: #FF5722;">Restore
+                                    Database</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End Tab 2 -->
+
+            <!-- TAB 3: HISTORY -->
+            <div class="tab-page" id="tab-history">
+                <div class="card history">
+                    <h3>Recent Games</h3>
+                    {% for match in matches %}
+                    <div class="history-item">
+                        <div class="match-score-display">{{ match.score }}</div>
+                        <div class="match-players-stack">
+                            <div class="winner-info">
+                                <strong style="color:#4CAF50">{{ match.winner.name }}</strong>
+                                <span style="font-size: 0.8em; color: #aaa;">({{ match.winner_pre_elo }}
+                                    <span style="color: #4CAF50;">+{{ match.winner_post_elo - match.winner_pre_elo
+                                        }}</span>)</span>
+                            </div>
+                            <div class="loser-info">
+                                {{ match.loser.name }}
+                                <span style="font-size: 0.8em; color: #aaa;">({{ match.loser_pre_elo }}
+                                    <span style="color: #F44336;">{{ match.loser_post_elo - match.loser_pre_elo
+                                        }}</span>)</span>
+                            </div>
+                        </div>
+
+                        <div class="match-actions-and-date">
+                            <div class="match-timestamp-container" data-utc-date="{{ match.date }}">
+                                <span class="js-local-datetime">Loading...</span>
+                            </div>
+                            <form id="match-admin-{{ match.id }}" class="admin-hidden"
+                                action="/remove_match/{{ match.id }}" method="POST" style="margin:0; width: 120px;"
+                                onsubmit="return injectAdminPassword(this)">
+                                <input type="hidden" name="admin_password" class="admin-password-field-hidden">
+                                <button type="submit" class="remove-btn">Revert Match</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div> <!-- End Tab 3 -->
+        </div> <!-- End Tab Container -->
+    </div> <!-- End Main View -->
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="switchTab(0)" id="nav-btn-0">
+            <span class="nav-icon">🏆</span>
+            <span>Tournament</span>
         </div>
-        {% endfor %}
+        <div class="nav-item active" onclick="switchTab(1)" id="nav-btn-1">
+            <span class="nav-icon">🏅</span>
+            <span>Leaderboard</span>
+        </div>
+        <div class="nav-item" onclick="switchTab(2)" id="nav-btn-2">
+            <span class="nav-icon">🕒</span>
+            <span>History</span>
+        </div>
     </div>
 
     <script>
@@ -966,6 +1096,65 @@
         let clickCount = 0;
         let lastClickTime = 0;
         const DOUBLE_CLICK_TIME = 300;
+
+        // --- TAB NAVIGATION JS ---
+        let currentTab = 1; // Default to Leaderboard (Index 1)
+
+        function switchTab(index) {
+            currentTab = index;
+            const container = document.getElementById('tab-container');
+            const pageWidth = 100 / 3; // 33.33%
+
+            // Move container
+            container.style.transform = `translateX(-${index * pageWidth}%)`;
+
+            // Update Active Nav
+            document.querySelectorAll('.nav-item').forEach((el, idx) => {
+                if (idx === index) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+
+            // Save state (optional, for page reload)
+            localStorage.setItem('pong_active_tab', index);
+        }
+
+        // Initialize Tab from storage
+        const savedTab = localStorage.getItem('pong_active_tab');
+        if (savedTab !== null) {
+            switchTab(parseInt(savedTab));
+        } else {
+            switchTab(1); // Default to center
+        }
+
+        // --- SWIPE LOGIC ---
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const minSwipeDistance = 50;
+
+        const mainView = document.getElementById('main-view');
+
+        mainView.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        mainView.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const distance = touchEndX - touchStartX;
+
+            if (Math.abs(distance) < minSwipeDistance) return;
+
+            if (distance > 0) {
+                // Swiped Right -> Go Left
+                if (currentTab > 0) switchTab(currentTab - 1);
+            } else {
+                // Swiped Left -> Go Right
+                if (currentTab < 2) switchTab(currentTab + 1);
+            }
+        }
 
         // Function to format UTC dates to EST/EDT
         function formatDatesToEst() {
