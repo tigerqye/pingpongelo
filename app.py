@@ -708,6 +708,42 @@ def import_db():
     else:
          return "Invalid file type. Please upload a .zip file.", 400
 
+@app.route('/player_details/<int:player_id>')
+def player_details(player_id):
+    player = Player.query.get_or_404(player_id)
+    
+    # Fetch last 5 matches for this player
+    # A match is relevant if the player is either winner or loser
+    recent_matches = Match.query.filter(
+        (Match.winner_id == player_id) | (Match.loser_id == player_id)
+    ).order_by(Match.date.desc()).limit(5).all()
+    
+    last_games = []
+    for m in recent_matches:
+        is_winner = (m.winner_id == player_id)
+        opponent = m.loser.name if is_winner else m.winner.name
+        result = "Win" if is_winner else "Loss"
+        pre_elo = m.winner_pre_elo if is_winner else m.loser_pre_elo
+        post_elo = m.winner_post_elo if is_winner else m.loser_post_elo
+        
+        last_games.append({
+            "opponent": opponent,
+            "result": result,
+            "score": m.score,
+            "date": m.date.isoformat(), # Send ISO format for frontend processing
+            "pre_elo": pre_elo,
+            "post_elo": post_elo
+        })
+        
+    return {
+        "name": player.name,
+        "elo": player.elo,
+        "wins": player.wins,
+        "losses": player.losses,
+        "last_games": last_games
+    }
+
+
 def init_db():
     """Initializes the database structure and ensures a LeagueConfig entry exists."""
     with app.app_context():
