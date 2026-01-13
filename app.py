@@ -191,7 +191,7 @@ def index():
     matches = Match.query.options(
         joinedload(Match.winner), 
         joinedload(Match.loser)
-    ).order_by(Match.date.desc()).limit(10).all()
+    ).order_by(Match.date.desc()).limit(20).all()
     
     config = LeagueConfig.query.get(1)
     admin_note = config.admin_note if config else ""
